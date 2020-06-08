@@ -1,7 +1,7 @@
       SUBROUTINE CALC_GIMLI                                              &
      &           (CCAL     ,DCDP     ,DRESDP   ,GRIDVTK  ,IFLAGS         &
-     &           ,NFLAGS   ,NPAR     ,NUMELEM  ,NUMNP    ,POR            &
-     &           ,RESCAL   ,NDEVGEO)
+     &           ,NDEVGEO  ,NFLAGS   ,NPAR     ,NUMELEM  ,NUMNP          &
+     &           ,POR      ,RESCAL   ,TABSOLUT)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !     PURPOSE
 !     
@@ -19,8 +19,10 @@
 !                            respect to the parameters.
 !     IFLAGS                 Array with different writing options. Used mainly for 
 !                            debugging.                                             
-!     RESCAL                 Computed resistivities at every node                          
-!     
+!     RESCAL                 Computed resistivities at every node   
+!
+!     TABSOLUT               Current absolut computation time. Needed to let GIMLI know the ERT 
+!                            acquisition scheme. 
 !     
 !     EXTERNAL VARIABLES: SCALARS
 !     
@@ -66,6 +68,7 @@
 
       INTEGER*4::NDEVGEO, NPAR, NFLAGS, NUMNP, NUMELEM
 
+      REAL*8:: TABSOLUT
       INTEGER*4::IFLAGS(NFLAGS)
 
       REAL*8::CCAL(NUMNP), POR(NUMELEM), DCDP(NUMNP,NPAR)
@@ -121,7 +124,7 @@
       CALL ERR_PRINT
 		
       ! CREATE ARGUMENT FOR THE MAIN PYTHON FUNCTION. THE FUNCTION WILL TAKE 'NDARRAY_CCAL', 'NDARRAY_POR', 'NDARRAY_DCDP' 
-      IERROR = TUPLE_CREATE(ARGS, 3)
+      IERROR = TUPLE_CREATE(ARGS, 4)
       CALL ERR_PRINT
       IERROR = ARGS%SETITEM(0, NDARRAY_CCAL)
       CALL ERR_PRINT
@@ -129,6 +132,7 @@
       CALL ERR_PRINT
       IERROR = ARGS%SETITEM(2, NDARRAY_DCDP)
       CALL ERR_PRINT
+      IERROR = ARGS%SETITEM(3, TABSOLUT)
         
       ! CALL THE FUNCTION "RUN_ERT" INSIDE THE "GIMLI_MOD.PY" FILE, WITH THE ARGUMENTS. 
       IERROR = CALL_PY(RETVAL, GIMLI_ERT, "RUN_ERT", ARGS)
@@ -156,8 +160,6 @@
       IERROR = NDARRAY_DRESDP%GET_DATA(PTR_DRESDP, ORDER='C')
       CALL ERR_PRINT
       
-!-------------------------
-!------------------------- TO DO
 
       IF(IFLAGS(3).EQ.1) CALL IO_SUB('COMP_OBS_GEO',1)
 

@@ -136,10 +136,12 @@ C------------------------observations is found.
 
                 CALL   CALC_GIMLI(CCAL(1,IPROB)
      &                           ,DERC(1,1,INEWT,IPROB)        ,DRESDP
-     &                           ,'HYDROMESH.vtk'    ,IFLAGS   ,NFLAGS
-     &                           ,NPAR               ,NUMELEM  ,NUMNP
-     &                           ,POR                ,RESCAL   ,NDEVGEO)
+     &                           ,'HYDROMESH.vtk'    ,IFLAGS   ,NDEVGEO
+     &                           ,NFLAGS             ,NPAR     ,NUMELEM
+     &                           ,NUMNP              ,POR      ,RESCAL
+     &                           ,TABSOLUT)
 
+                
                IOCALGEO = 0     !Do not calc. geo. obs. again this time step.             
                !RESCAL = 1D0     !for verification
                !DRESDC = 1D0
