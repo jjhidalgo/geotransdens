@@ -4,7 +4,7 @@
 OBJDIR = .
 PROGDIR = .
 
-PROG =	$(addprefix $(PROGDIR)/, tdppgeo)
+PROG =	$(addprefix $(PROGDIR)/, geotransdens)
 
 SRCS =	algeb.f alli.f alpha.f area_elem.f ass_covinv.f ass_eval.f \
 	ass_ext_drift.f ass_integ_val.f ass_real_val.f \
