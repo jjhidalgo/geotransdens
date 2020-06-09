@@ -1,7 +1,7 @@
       SUBROUTINE CALC_GIMLI                                              &
-     &           (CCAL     ,DCDP     ,DRESDP   ,GRIDVTK  ,IFLAGS         &
-     &           ,NDEVGEO  ,NFLAGS   ,NPAR     ,NUMELEM  ,NUMNP          &
-     &           ,POR      ,RESCAL   ,TABSOLUT)
+     &           (CCAL     ,DCDP     ,DRESDP   ,IFLAGS   ,NDEVGEO        &
+     &           ,NFLAGS   ,NPAR     ,NUMEL    ,NUMNP    ,POROSITY       &
+     &           ,RESCAL   ,TABSOLUT)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !     PURPOSE
 !     
@@ -12,7 +12,7 @@
 !     EXTERNAL VARIABLES: ARRAYS
 !     
 !     CCAL                   Computed concentration at every node.  
-!     POR                    Porosity at every element.
+!     POROSITY               Porosity at every element.
 !     DCDP                   Derivative of the concentration at every node
 !                            with respect to the parameters.
 !     DRESDP                 Derivative of resisitivity at the observation points with
@@ -30,7 +30,7 @@
 !     NPAR                   Number of parameters.
 !     NFLAGS                 Used to dimension IFLAGS.
 !     NUMNP                  Number of nodes. 
-!     NUMELEM                Number of elements                                      
+!     NUMEL                  Number of elements                                      
 !     
 !
 !     INTERNAL VARIABLES: ARRAYS
@@ -66,15 +66,14 @@
 
 !-------------------------External variables
 
-      INTEGER*4::NDEVGEO, NPAR, NFLAGS, NUMNP, NUMELEM
+      INTEGER*4::NDEVGEO, NPAR, NFLAGS, NUMNP, NUMEL
 
       REAL*8:: TABSOLUT
       INTEGER*4::IFLAGS(NFLAGS)
 
-      REAL*8::CCAL(NUMNP), POR(NUMELEM), DCDP(NUMNP,NPAR)
+      REAL*8::CCAL(NUMNP), POROSITY(NUMEL), DCDP(NUMNP,NPAR)
       REAL*8::DRESDP(NDEVGEO,NPAR), RESCAL(NDEVGEO)
 
-      CHARACTER(LEN=15) :: GRIDVTK 
      
 !-------------------------Internal variables
         
@@ -114,7 +113,7 @@
       ! WE WRAP THE INPUT FROM TRANSDENS INTO ARRAYS THAT CAN BE USED BY PYTHON. 
       IERROR = NDARRAY_CREATE_NOCOPY(NDARRAY_CCAL, CCAL)
       CALL ERR_PRINT
-      IERROR = NDARRAY_CREATE_NOCOPY(NDARRAY_POR, POR)
+      IERROR = NDARRAY_CREATE_NOCOPY(NDARRAY_POR, POROSITY)
       CALL ERR_PRINT
       IERROR = NDARRAY_CREATE_NOCOPY(NDARRAY_DCDP, DCDP)
       CALL ERR_PRINT
@@ -157,9 +156,15 @@
       ! USE "GET_DATA" TO ACCESS THE DATA IN THE ARRAYS AND PUT THEM IN FORTRAN ARRAYS "PTR"
       IERROR = NDARRAY_RESCAL%GET_DATA(PTR_RESCAL)
       CALL ERR_PRINT
-      IERROR = NDARRAY_DRESDP%GET_DATA(PTR_DRESDP, ORDER='C')
+      IERROR = NDARRAY_DRESDP%GET_DATA(PTR_DRESDP, ORDER='F')
       CALL ERR_PRINT
-      
+
+      dresdp = PTR_DRESDP
+      print*,'ptr_dresdp'
+      print*,PTR_DRESDP
+
+      print*,'dresdp'
+      print*, DRESDP
 
       IF(IFLAGS(3).EQ.1) CALL IO_SUB('COMP_OBS_GEO',1)
 

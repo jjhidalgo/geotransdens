@@ -209,10 +209,10 @@ LIBS =
 F90 = gfortran
 #F90 = x86_64-conda_cos6-linux-gnu-gfortran 
 #Debug
-#F90FLAGS = -ggdb -fbounds-check -Wall -Wtabs -g3
-#F90FLAGS = -ggdb -Wall -Wtabs -g3 
+#F90FLAGS = -ggdb -fbounds-check -Wall -Wtabs -g3 -finit-local-zero 
+F90FLAGS = -ggdb -Wall -Wtabs -g3 -finit-local-zero 
 #Release
-F90FLAGS = -O3 -finit-local-zero 
+#F90FLAGS = -O3 -finit-local-zero 
 LDFLAGS = 
 PYFLAGS =  -fno-lto `python3-config --ldflags` -lpython3.6
 PYFLAGS =  `python3-config --ldflags` 

@@ -1,10 +1,10 @@
       SUBROUTINE COMP_OBS_GEO
      ;     (CCAL     ,ACTH     ,CFPAREL  ,DERC     ,DVOBS    ,IDIMDERC
-     ;     ,IFLAGS   ,INEW     ,INEWT    ,INORPAR  ,IODEVICE ,IOINV
-     ;     ,IOPLC    ,IOSMTP   ,IPBTP    ,LXPAREL  ,NDEVGEO  ,NDEVS
-     ;     ,NFLAGS   ,NOOBSIT  ,NPAR     ,NPAREL   ,NPBMX    ,NPBTP 
-     ;     ,NTYPAR   ,NUMEL    ,NUMNP    ,NUMTIT   ,NUMTOBS  ,NZPAR
-     ;     ,PARZ     ,TABSOLUT,TIT      ,VJAC      ,VOBSC)
+     ;     ,IFLAGS   ,INEWT    ,INORPAR  ,IODEVICE ,IOINV    ,IOSMTP
+     ;     ,IPBTP    ,LXPAREL  ,NDEVGEO  ,NDEVS    ,NFLAGS   ,NOOBSIT
+     ;     ,NPAR     ,NPAREL   ,NPBMX    ,NPBTP    ,NTYPAR   ,NUMEL
+     ;     ,NUMNP    ,NUMTIT   ,NUMTOBS  ,NZPAR    ,PARZ     ,TABSOLUT
+     ;     ,TIT      ,VJAC      ,VOBSC)
 ***********************************************************************
 *     PURPOSE
 *     
@@ -73,21 +73,25 @@
 *     
 ***********************************************************************
 
-      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-      INTEGER*4::NDEVGEO
+      IMPLICIT NONE
+      INTEGER*4::IDIMDERC ,INEWT,IPBTP,IOINV, IOSMTP,NDEVGEO  
+     ;          ,NDEVS,NFLAGS,NPAR,NPAREL   ,NPBMX,NPBTP,NTYPAR,NUMEL
+     ;          ,NUMNP    ,NUMTIT   ,NUMTOBS ,NZPAR
 
-      DIMENSION TIT(NUMTIT),IODEVICE(NDEVS+1,10)
-     ;     ,CCAL(NUMNP,NPBTP)
-     ;     ,DERC(NUMNP,NPAR,IDIMDERC,NPBTP)
-     ;     ,IFLAGS(NFLAGS) 
-     ;     ,VOBSC(NUMTOBS+NDEVS),VJAC(NUMTOBS,NPAR)
-     ;     ,NOOBSIT(NUMTIT),DVOBS(NPAR),CFPAREL(NUMEL,NPAREL)
-     ;     ,PARZ(NZPAR),LXPAREL(NUMEL,NPAREL,NPBMX), ACTH(NUMEL)
-     ;     ,INORPAR(NTYPAR)
+      REAL*8:: TABSOLUT
+      INTEGER*4::IFLAGS(NFLAGS), INORPAR(NTYPAR), IODEVICE(NDEVS+1,10)
+     ;          ,LXPAREL(NUMEL,NPAREL,NPBMX), NOOBSIT(NUMTIT)
+
+      REAL*8::ACTH(NUMEL)           ,CCAL(NUMNP,NPBTP)
+     ;       ,CFPAREL(NUMEL,NPAREL) ,DERC(NUMNP,NPAR,IDIMDERC,NPBTP)
+     ;       ,DVOBS(NPAR)           ,PARZ(NZPAR)
+     ;       ,TIT(NUMTIT)           ,VJAC(NUMTOBS,NPAR)
+     ;       ,VOBSC(NUMTOBS+NDEVS)
 
 C-------------------------Internal variables
-      INTEGER*4::IOCALGEO
-      REAL*8::RESCAL(NDEVGEO),DRESDC(NUMNP,NDEVGEO),POROSITY(NUMEL)
+      INTEGER*4::IPROB, IOCALGEO, ND, NP,NO
+      REAL*8::TNX
+      REAL*8::RESCAL(NDEVGEO),DRESDP(NDEVGEO,NPAR),POROSITY(NUMEL)
 
 C-------------------------First executable statment.
 
@@ -98,7 +102,6 @@ C-------------------------Checks if any device has geophysical observations
 C-------------------------at the current solution time.
       DO ND=1,NDEVS
          DVOBS = 0D0
-         TNX=TIT(IODEVICE(ND,2)) ! Next integration time
 
 C------------------------If not geophysical data or not used, go to next device.
          IF (IODEVICE(ND,1).NE.6   .OR. 
@@ -115,7 +118,9 @@ C------------------------Checks device problem.
          ELSE
             IPROB=IODEVICE(ND,9) ! Flow/tpt. problem 
          ENDIF
-         
+
+         TNX=TIT(IODEVICE(ND,2)) ! Next integration time
+
          IF (IOSMTP.NE.0 .OR. IPBTP.EQ.IODEVICE(ND,9)) THEN
             TNX=TIT(IODEVICE(ND,2)) ! Next int. time
          ELSE
@@ -137,8 +142,8 @@ C------------------------observations is found.
                 CALL   CALC_GIMLI(CCAL(1,IPROB)
      &                           ,DERC(1,1,INEWT,IPROB)        ,DRESDP
      &                           ,'HYDROMESH.vtk'    ,IFLAGS   ,NDEVGEO
-     &                           ,NFLAGS             ,NPAR     ,NUMELEM
-     &                           ,NUMNP              ,POR      ,RESCAL
+     &                           ,NFLAGS             ,NPAR     ,NUMEL
+     &                           ,NUMNP              ,POROSITY ,RESCAL
      &                           ,TABSOLUT)
 
                 
@@ -154,8 +159,7 @@ C------------------------observations is found.
 
             IF (IOINV.GT.0) THEN
                DO NP=1,NPAR
-                  VJAC(NO,NP)=DOT_PRODUCT(DRESDC(:,ND)
-     ;                                   ,DERC(:,NP,INEW,IPBT))
+                  VJAC(NO,NP)= DRESDP(ND,NP)
                ENDDO
             END IF
             

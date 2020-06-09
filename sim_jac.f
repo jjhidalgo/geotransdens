@@ -1485,16 +1485,12 @@ C------------------------- Writes mesh for ERT if not already done.
                            END IF  !No HYDDROMESH.vtk
 
                          CALL  COMP_OBS_GEO
-     ;(81         ,INEW     ,IOINV    ,IOLD     ,IOWRITE(6)
-     ;,IOWRITE(5) ,NDEVS    ,NPAR     ,NPARF    ,NPBFL    ,NPBTP    
-     ;,NUMNP      ,NUMTIT   ,NUMTNOD  ,NUMTOBS  ,TABSOLUT ,TINC     
-     ;,CCALIT     ,DERC                         ,DVOBS
-     ;,INDEXNOD ,IODEVICE ,NOOBSIT  ,TIT      ,TOBS     
-     ;,VJAC       ,VOBSC    ,WTOBSN   ,WTOBST   ,INEWT    ,IOLDT
-     ;,IOPTS(28)  ,IOPTS(29),IPBFL    ,IPBTP    ,TIME     ,NINT
-     ;,IDIMDERH   ,IDIMDERC ,IFLAGS   ,NFLAGS   ,NDEVGEO  ,NUMEL
-     :,CFPAREL    ,NPAREL   ,PARZ     ,NZPAR    ,LXPAREL  ,NPBMX
-     ;,ACTH     ,INORPAR  ,NTYPAR)
+     ;     (CCALIT   ,ACTH     ,CFPAREL  ,DERC     ,DVOBS    ,IDIMDERC
+     ;     ,IFLAGS   ,INEWT    ,INORPAR  ,IODEVICE ,IOINV    ,IOPTS(29)
+     ;     ,IPBTP    ,LXPAREL  ,NDEVGEO  ,NDEVS    ,NFLAGS   ,NOOBSIT
+     ;     ,NPAR     ,NPAREL   ,NPBMX    ,NPBTP    ,NTYPAR   ,NUMEL
+     ;     ,NUMNP    ,NUMTIT   ,NUMTOBS  ,NZPAR    ,PARZ     ,TABSOLUT
+     ;     ,TIT      ,VJAC     ,VOBSC)
                       END IF !NDEVGEO.GT.0
                       
                   END IF !IOINV.LT.0 .AND. IOPL.GE.1 ...
