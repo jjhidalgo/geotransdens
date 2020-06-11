@@ -23,7 +23,7 @@ C------------------------- External
 
       Integer*4::GetVTKCellType
 
-      Character*80::Title
+      Character*9::Title
 
       Integer*4::KXX(LMXNDL,NUMEL),LNNDEL(NUMEL),LTYPE(NUMEL)
 
@@ -49,11 +49,10 @@ C------------------------- Escribe la cabecera
       Mask1d = .FALSE.
 
       Write(VTKUnit,10) Title
-
+      Write(*,10) Title
    10 Format('# vtk DataFile Version 1.0'
-     &      ,/,A80
+     &      ,/,A9
      &      ,/,'ASCII'
-     &      ,/
      &      ,/,'DATASET UNSTRUCTURED_GRID')
 
 C-------------------------
@@ -95,7 +94,7 @@ C------------------------- describir las celdas.
 C------------------------- Escribe las celdas (conectividades)
      
       Write(VTKUnit,40) NCells,ListSize
-   40 Format (/,'CELLS',1X,I6,1X,I9)
+   40 Format ('CELLS',1X,I6,1X,I9)
 
       
 
