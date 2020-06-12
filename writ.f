@@ -53,11 +53,19 @@ C------------------------- Format for program CUR
 C-------------------------Geophysical observations controlled by IOPLC. 
 
        DO IPROB=1,NPBTP
-          IF (IOPLC.NE.0) CALL WR_IOPL 
-     ;(81       ,IOPLC    ,6        ,IPROB    ,26      ,NDEVS
+          IF (IOPLC.NE.0) THEN
+             IF (IOPLC.GT.1) THEN
+                WRITE(MAINF,111)
+111             FORMAT(/,/ 'WARNING: IOPLC > 1 NOT IMPLEMENTED ',
+     &                     'FOR GEOPHYSICAL OBSERVATIONS. '
+     &                     'USING IOPLC=1.',/)
+              ENDIF
+                
+              CALL WR_IOPL 
+     ;(81       ,1        ,6        ,IPROB    ,26      ,NDEVS
      ;,NUMTIT   ,NUMTOBS  ,IODEVICE ,TIT     ,VOBSC(NUMTOBS+1)
      ;,VOBS     ,VOBSC    ,DEVNAME)
-
+           ENDIF
        ENDDO
 
 C------------------------- Format for program MESHPLOT

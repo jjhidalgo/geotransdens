@@ -49,7 +49,7 @@ C------------------------- Escribe la cabecera
       Mask1d = .FALSE.
 
       Write(VTKUnit,10) Title
-      Write(*,10) Title
+
    10 Format('# vtk DataFile Version 1.0'
      &      ,/,A9
      &      ,/,'ASCII'
