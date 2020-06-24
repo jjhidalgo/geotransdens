@@ -147,6 +147,7 @@
 *  NZCHP                  Number of prescribed head zones
 *  NZDMT                  Number of matrix diffusion zones
 *  NZFOD                  Number of zones of first order decay
+*  NZFOF                  Number of zones of formation factor      
 *  NZPAR                  Total number of zones for all nodal and element
 *                         parameters including each transmissivity tensor
 *                         component.
@@ -295,7 +296,7 @@ C--------------- Initialization of integer variables used to dimension
      ;,ICAN_CN  ,IALW_CN  ,IPAR_DIR ,NPARALG, ITYPAFLU, ITYPBFLU
      ;,ITYPCFLU ,ITYPDFLU ,ITYPATRA ,ITYPDTRA
      ;,ITYPBTRA ,ITYPFLUDSC,ITYPTRADSC,ITYPCOUPLDSC, ITYPDERIV
-     ;,IDIMDENS ,IOPTS(31),IDIMGRAVEL,NZONE_PAR(18)
+     ;,IDIMDENS ,IOPTS(31),IDIMGRAVEL,NZONE_PAR(18),NZONE_PAR(19)
      &,IDIMDERH,IDIMDERC
      ; ,IDIMIVARIO_GS  ,IDIMWGT        ,IDIMZONPP_GS   ,IOINV_GS
      ; ,MXCLOSE_GS     ,MXDISC_GS      ,MXGRPZN        ,MXKRIG_GS
@@ -1451,7 +1452,7 @@ C--------------- Calls main subprogram
 
       CALL PRINCIPAL
      ;(!--------------------------------------------------dimensioning variables
-     ;IAFLUDSC_COLS         ,IAFLUDSC_ROWS          ,IATRADSC_COLS
+     ;IAFLUDSC_COLS        ,IAFLUDSC_ROWS          ,IATRADSC_COLS
      ;,IATRADSC_ROWS       ,IA_COUPLED_DSC_COLS    ,IA_COUPLED_DSC_ROWS
      ;,IDIMAFLU            ,IDIMDFLU               ,IDIMCFLU
      ;,IDIMATRA

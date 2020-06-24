@@ -449,7 +449,7 @@
 *  ZERO_ARRAY                                                                   
 *
 *****************************************************************************
-
+       USE forpy_mod      
        IMPLICIT REAL*8 (A-H,O-Z)
 
        CHARACTER FILENAME(20)*20
@@ -775,6 +775,20 @@ c             ENDIF
 c-fin-parche
            ENDIF
 
+C------------ Number of geophysical observations and FORPY initialization.           
+      IF (ANY(IODEVICE(:,1).EQ.6)) THEN !Geophysical observations.
+         NDEVGEO = COUNT(IODEVICE(:,1).EQ.6)
+      ELSE
+         NDEVGEO = 0
+      END IF
+
+      IF (NDEVGEO.GT.0) THEN
+          IERROR = FORPY_INITIALIZE()
+          IF (IERROR == NO_NUMPY_ERROR) THEN
+              WRITE(*,*) "THIS EXAMPLE NEEDS NUMPY..."
+              STOP
+          ENDIF
+      ENDIF
 
            CALL SIM_JAC
      &(A_COUPL_DSC,A_COUPL_DSCF,ACTH     ,AFLU        ,AFLUDSC  
@@ -835,7 +849,7 @@ c-fin-parche
      &,VJAC      ,VOBSC     ,WATVOL      ,WORK     ,WTOBSN  ,WTOBST
      &,XNORVD    ,DVDP      ,IOLG_PAR    ,IOCTRA   ,HINI,WSPECHEAT
      &,WTHERMCON
-     ;,IDIMWGT   ,WGT_PAR  ,IPNT_PAR,IPOS     ,DERIV)
+     ;,IDIMWGT   ,WGT_PAR  ,IPNT_PAR,IPOS     ,DERIV ,NDEVGEO)
 
            IF (IFLAGS(4).EQ.1 .AND. NUMITER.EQ.1) CLOSE(69)
 
@@ -1003,9 +1017,12 @@ C_________________________ Initializes array ALFA, containing leakage coeff.
      &,VJAC      ,VOBSC     ,WATVOL      ,WORK     ,WTOBSN  ,WTOBST
      &,XNORVD    ,DVDP      ,IOLG_PAR    ,IOCTRA   ,HINI,WSPECHEAT
      &,WTHERMCON
-     ;,IDIMWGT   ,WGT_PAR  ,IPNT_PAR,IPOS     ,DERIV)
+     ;,IDIMWGT   ,WGT_PAR  ,IPNT_PAR,IPOS     ,DERIV ,NDEVGEO)
        END IF
 
+      IF (NDEVGEO.GT.0) THEN
+          CALL FORPY_FINALIZE
+      ENDIF
        IF(IFLAGS(3).EQ.1) CALL IO_SUB('INVER',1)
        RETURN
        END

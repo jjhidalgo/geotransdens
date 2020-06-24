@@ -55,7 +55,7 @@
      &,VISCOSITY ,VISCREF   ,VJAC        ,VOBSC    ,WATVOL  ,WORK
      &,WTOBSN    ,WTOBST    ,XNORVD,DVDP,IOLG_PAR,IOCTRA,HINI,WSPECHEAT
      &,WTHERMCON
-     ;,IDIMWGT   ,WGT_PAR  ,IPNT_PAR,IPOS     ,DERIV)
+     ;,IDIMWGT   ,WGT_PAR  ,IPNT_PAR,IPOS     ,DERIV, NDEVGEO)
 
 ********************************************************************************
 *
@@ -310,10 +310,9 @@
       CHARACTER*20::FILENAME
 
       INTEGER*4 IREDTIMGL,NUMDIVCGL,NUMDIVHGL,NCONVIFL
-     &,ISYMETRIC,ND,NFL_SIM,NTP_SIM,I_REC,INCLK,IORECATRA,IOFIRST
+     &     ,ISYMETRIC,ND,NFL_SIM,NTP_SIM,I_REC,INCLK,IORECATRA,IOFIRST
+     &     ,NDEVGEO
 
-C------------------------- Internal variables
-      INTEGER*4::NDEVGEO
 C------------------------- First executable statement
 
 C------------------------- If requiered by user, the entrance in the
@@ -348,11 +347,6 @@ C------------------------- subroutine is written in the main unit.
          MAXNBF=1  ! para que no pete JAC_C
       ENDIF
 
-      IF (ANY(IODEVICE(:,1).EQ.6)) THEN !Geophysical observations.
-         NDEVGEO = COUNT(IODEVICE(:,1).EQ.6)
-      ELSE
-         NDEVGEO = 0
-      END IF
 C------------------------- Initialization of time step control variables
 
       DTIMEF = 0D0

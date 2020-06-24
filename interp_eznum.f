@@ -1,11 +1,11 @@
       SUBROUTINE INTERP_EZNUM
      ; (INPWR    ,IOEQT    ,IOFLSAT  ,IOTRS    ,LDARR    ,LDARRT
-     ; ,LDCOE    ,LDCRD    ,LDDFM    ,LDDSP    ,LDFOD    ,LDPOR
+     ; ,LDCOE    ,LDCRD    ,LDDFM    ,LDDSP    ,LDFOD    ,LDFOF, LDPOR
      ; ,LDSTG    ,LDTRA    ,MAINF    ,N        ,NE       ,NOLD
      ; ,NUMEL    ,NZARR    ,NZCOE    ,NZCRD    ,NZDFM    ,NZDSP
-     ; ,NZFOD    ,NZPOR    ,NZSTG    ,NZTRA    ,LDIM     ,LTYPE
+     ; ,NZFOD    ,NZFOF    ,NZPOR    ,NZSTG    ,NZTRA    ,LDIM   ,LTYPE
      ; ,LXARR    ,LXARRT   ,LXCOE    ,LXCRD    ,LXDFM    ,LXDSP
-     ; ,LXFOD    ,LXPOR    ,LXSTG    ,LXTRA)
+     ; ,LXFOD    ,LXFOF    ,LXPOR    ,LXSTG    ,LXTRA)
 
 *****************************************************************************
 * PURPOSE 
@@ -33,6 +33,7 @@
 *  LXDFM                  Molecular diffusion zone number at a given element    
 *  LXDSP                  Dispersivity zone number at a given element           
 *  LXFOD                  First order decay zone number at a given element      
+*  LXFOD                  Formation factor zone number at a given element      
 *  LXPOR                  Porosity zone number at a given element               
 *  LXSTG                  Storage coefficient zone number at a given element    
 *  LXTRA                  Transmissivity zone number at a given element         
@@ -60,8 +61,9 @@
 *  NZCRD                  Number of retardation Coefficient zones               
 *  NZDFM                  Number of molecular difusion zones                    
 *  NZDSP                  Number of dispersivity zones                          
-*  NZFOD                  Number of zones of first order decay                  
-*  NZPOR                  Number of porosity zones                              
+*  NZFOD                  Number of zones of first order decay
+*  NZFOD                  Number of zones of formation factor                   
+*  NZPOR                  Number of porosity zones                 
 *  NZSTG                  Number of storage Coefficient zones                   
 *  NZTRA                  Number of transmissivity zones                        
 *  NOLD                   Last element read before the jump 
@@ -100,7 +102,7 @@
        DIMENSION LDIM(NUMEL),LTYPE(NUMEL),
      ;      LXTRA(NUMEL),LXARR(NUMEL),LXARRT(NUMEL),
      ;      LXSTG(NUMEL),LXDSP(NUMEL),LXDFM(NUMEL),LXCOE(NUMEL),
-     ;      LXPOR(NUMEL),LXCRD(NUMEL),LXFOD(NUMEL)
+     ;      LXPOR(NUMEL),LXCRD(NUMEL),LXFOD(NUMEL), LXFOF(NUMEL)
         
 C------------------------- FIRST EXECUTABLE STATEMENT.
 
@@ -116,6 +118,7 @@ C------------------------- Initializes auxiliary variables
        LOLCRD=  0
        LOLCOE=  0
        LOLFOD=  0
+       LOLFOF=  0
 
        DO NN=N,NE-1 !N=NOLD+1
 
@@ -159,6 +162,8 @@ C------------------------- element.
              CALL ASS_EVAL (NZCOE,LDCOE,LXCOE(NOLD),LXCOE(NN))
 
              CALL ASS_EVAL (NZFOD,LDFOD,LXFOD(NOLD),LXFOD(NN))
+
+             CALL ASS_EVAL (NZFOF,LDFOF,LXFOF(NOLD),LXFOF(NN))
      
           ELSE IF(IOFLSAT.NE.0)THEN
          
@@ -185,6 +190,7 @@ C------------------------- element.
                 IF (NZCRD.NE.0) LOLCRD=LXCRD(NN)
                 IF (NZCOE.NE.0) LOLCOE=LXCOE(NN)
                 IF (NZFOD.NE.0) LOLFOD=LXFOD(NN)
+                IF (NZFOF.NE.0) LOLFOF=LXFOF(NN)
              ELSE IF(IOFLSAT.NE.0)THEN
                 IF (NZPOR.NE.0) LOLPOR=LXPOR(NN)
              ENDIF
@@ -193,8 +199,8 @@ C------------------------- element.
 *_______________________on MAIN file
 
              WRITE (MAINF,3000) NN,LOLTRA,LOLSTG,LOLARR,LOLARRT,
-     ;                 LOLDSP,LOLDFM,LOLPOR,LOLCRD,LOLCOE,LOLFOD
- 3000        FORMAT(11I5,2F10.0)     
+     ;                 LOLDSP,LOLDFM,LOLPOR,LOLCRD,LOLCOE,LOLFOD,LOLFOF
+ 3000        FORMAT(12I5,2F10.0)     
           ENDIF   
              
        ENDDO !NEXT ELEMENT

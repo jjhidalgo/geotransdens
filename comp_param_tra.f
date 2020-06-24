@@ -155,7 +155,7 @@ C------------------------- Internal
       INTEGER*4::L,NNUD,JJ,J,I,IB
       INTEGER*4::NFNLCLK  ,NFNLCOE  ,NFNLDFM  ,NFNLDSL  ,NFNLDST
      &          ,NFNLFOD  ,NFNLMDF  ,NFNLPOR  ,NFNLRET  ,NFTCLK
-     &          ,NFTCOE
+     &          ,NFTCOE   ,NFNLFOF
      &          ,NFTDFM   ,NFTDSL   ,NFTDST   ,NFTFOD   ,NFTIP
      &          ,NFTMDF,NFTPOR
      &          ,NFTRET
@@ -522,6 +522,60 @@ C-------------------------  Assigns derivative
               IF (IODENS.EQ.1) THEN
 
                   DPARELDC(15,L) = DERSCC
+
+              END IF !IODENS.EQ.1
+
+          END IF !IOTRLI.NE.0
+
+          
+C------------------------- External concentration (elements)
+
+          IF (NZONE_PAR(19).NE.0) THEN
+
+              JJ = INORPAR(22) + LXPAREL(L,12)
+              NFTCOE = NFTPAR(JJ)
+
+              IF (IOTRLI.NE.0) THEN
+
+                  NFNLFOF = NFNLPAR(JJ)
+                  NFTIP = 0
+                  IF (NFNLFOF.NE.0) NFTIP = NFNLTIP(NFNLFOF)
+
+              ELSE
+
+                  NFNLFOF = 0
+                  NFTIP = 0
+
+              END IF            !IOTRLI.NE.0 
+
+
+              CALL PARAM_VALUE
+     &            (CFPAREL(L,11)      ,DERSCC   ,DERSCH   ,DTIMET
+     &            ,EPSTRA   ,IDIMFNT  ,INDSSTR  ,INTI     ,IOFMLT
+     &            ,L        ,LMXNDL   ,NFLAGS   ,NFNL     ,NFNLFOF
+     &            ,NFTIP    ,NFTCOE   ,NINT     ,NNUD
+     &            ,NPARALG  ,NUMEL    ,NUMNP    ,NZPRG   ,PARC(JJ)
+     &            ,PAREL(L,16)        ,PRGC      ,FNT     ,CCALAN
+     &            ,CCALIT   ,IFLAGS   ,IPAR_DIR  ,KXX     ,NFNLPRG
+     &            ,PARACD   ,XPARAM)
+
+          ELSE
+
+              PAREL(L,16) = 0D0
+              DERSCC = 0D0
+              DERSCH = 0D0
+
+          END IF !NZONE_PAR(19).NE.0
+
+C-------------------------  Assigns derivative
+
+          IF (IOTRLI.NE.0) THEN
+
+              DPARELDH(16,L) = DERSCH
+
+              IF (IODENS.EQ.1) THEN
+
+                  DPARELDC(16,L) = DERSCC
 
               END IF !IODENS.EQ.1
 

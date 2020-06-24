@@ -161,11 +161,11 @@ C------------------------- External
      &       ,HBASE(NUMEL)              ,HCALAN(NUMNP)    ,HCALIT(NUMNP)
      &       ,PARACD(3,NFNL)            ,PARC(NZPAR)  ,WGT_PAR(IDIMWGT)
 
-      INTEGER*4::IFLAGS(NFLAGS)   ,INORPAR(NTYPAR),IVPAR(NZPAR)
-     &          ,KXX(LMXNDL,NUMEL),LNNDEL(NUMEL)  ,LXPAREL(NUMEL,NPAREL)
-     &          ,LTYPE(NUMEL)     ,NFNLPAR(NZPAR) ,NFNLTIP(NFNL)
-     &          ,NFNLPRG(8,NFNL)  ,NFTPAR(NZPAR)  ,NZONE_PAR(NTYPAR)
-
+      INTEGER*4::IFLAGS(NFLAGS)       ,INORPAR(NTYPAR)   ,IPOS(NPAR)
+     &          ,IVPAR(NZPAR)         ,KXX(LMXNDL,NUMEL) ,LNNDEL(NUMEL)
+     &          ,LXPAREL(NUMEL,NPAREL),LTYPE(NUMEL)      ,NFNLPAR(NZPAR)
+     &          ,NFNLTIP(NFNL)        ,NFNLPRG(8,NFNL)   ,NFTPAR(NZPAR)
+     &          ,NZONE_PAR(NTYPAR)
 
 C------------------------- Internal
 
@@ -175,7 +175,7 @@ C------------------------- Internal
 
       REAL*8::AREALN   ,BETAREALN,CNODE    ,DH_AVG
 
-      INTEGER*4::IPOS(12)  ,INDEX(NPAR)
+      INTEGER*4::INDEX(12)
 
       REAL*8::CFPARAM(12)  ,DERIV(NPAR)  ,DH(LMXNDL)
      &       ,RHO(LMXNDL)  ,XPARAM(8)
@@ -195,7 +195,7 @@ C------------------------- Cross over all elements
 
           IZON = LXPAREL(L,2)
           IP = IVPAR(INORPAR(7)+IZON)
-	    AREALN = AREA(L)/NNUD
+	  AREALN = AREA(L)/NNUD
 
 C------------------------- Computes integration factors to save operations
 
@@ -208,7 +208,7 @@ C------------------------- WTV(k+th) = WTV(k) + STG*THETAT*Delta_H
               IF (IOVRWC.EQ.0) THEN
 
                   RHO(:) = DENSITY(L)
-	            DH(:) = 0D0
+	          DH(:) = 0D0
 
               ELSE IF (IOVRWC.EQ.1) THEN
 
@@ -240,7 +240,7 @@ C------------------------- WTV(k+th) = WTV(k) + STG*THETAT*Delta_H
           ELSE
 
               BETAREALN = AREALN
-	        RHO(:) = 1D0
+	      RHO(:) = 1D0
 
           END IF !IODENS.EQ.1
 

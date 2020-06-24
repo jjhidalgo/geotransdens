@@ -358,7 +358,8 @@ C------------------------- type is surpassed
      ; ,FILENAME ,LDIM     ,LTYPE    ,LXPAREL(1,3,IPROB) 
      ; ,LXPAREL(1,4,IPROB) ,LXPAREL(1,10,IPROB) ,LXPAREL(1,9,IPROB) 
      ; ,LXPAREL(1,6,IPROB) ,LXPAREL(1,5,IPROB)  ,LXPAREL(1,8,IPROB) 
-     ; ,LXPAREL(1,7,IPROB) ,LXPAREL(1,2,IPROB)  ,LXPAREL(1,1,IPROB) )
+     ; ,LXPAREL(1,7,IPROB) ,LXPAREL(1,2,IPROB)  ,LXPAREL(1,1,IPROB)
+     & ,LXPAREL(1,12,IPROB) )
 
 C------------------------- Stores transmissivity zone dimensions
 
@@ -399,7 +400,8 @@ C------------------------- Reads elements coeficients
      ; ,12           ,MAINF        ,NPAREL       ,NROW
      ; ,NUMEL        ,NZONE_PAR(3) ,NZONE_PAR(13),NZONE_PAR(12)
      ; ,NZONE_PAR(9) ,NZONE_PAR(7) ,NZONE_PAR(11),NZONE_PAR(10)
-     ; ,NZONE_PAR(2) ,NZONE_PAR(1) ,CFPAREL      ,FILENAME)
+     ; ,NZONE_PAR(2) ,NZONE_PAR(1) ,CFPAREL      ,FILENAME
+     & ,11           ,NZONE_PAR(19))
 
 C------------------------- Reads zone parameters
 

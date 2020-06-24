@@ -6,7 +6,7 @@
      ; ,NZDFM    ,NZDSP    ,NZFOD    ,NZPOR    ,NZSTG    ,NZTRA
      ; ,FILENAME ,LDIM     ,LTYPE    ,LXARR    ,LXARRT   ,LXCOE
      ; ,LXCRD    ,LXDFM    ,LXDSP    ,LXFOD    ,LXPOR    ,LXSTG
-     ; ,LXTRA)
+     ; ,LXTRA    ,LXFOF)
 
 ********************************************************************************
 * PURPOSE 
@@ -45,6 +45,7 @@
 *  LXDFM                  Molecular diffusion zone number at a given element    
 *  LXDSP                  Dispersivity zone number at a given element           
 *  LXFOD                  First order decay zone number at a given element      
+*  LXFOF                  Formation factor zone number at a given element   
 *  LXPOR                  Porosity zone number at a given element               
 *  LXSTG                  Storage coefficient zone number at a given element    
 *  LXTRA                  Transmissivity zone number at a given element         
@@ -70,6 +71,7 @@
 *  NZDFM                  Number of molecular difusion zones                    
 *  NZDSP                  Number of dispersivity zones                          
 *  NZFOD                  Number of zones of first order decay                  
+*  NZFOF                  Number of zones of formation factor                  
 *  NZPOR                  Number of porosity zones                              
 *  NZSTG                  Number of storage Coefficient zones                   
 *  NZTRA                  Number of transmissivity zones                        
@@ -86,6 +88,7 @@
 *  LDDSP                  Default value for dispersivity
 *  LDDFM                  Default value for matrix diffusion
 *  LDCOE                  Default value for external concentration
+*  LDFOF                  Default value for formation factor
 *  LDPOR                  Default value for porosity
 *  LDCRD                  Default value for retardation coefficient    
 *  LTRA                   Read value for transmisivity zone number
@@ -95,6 +98,7 @@
 *  LDSP                   Read value for dispersivity
 *  LDFM                   Read value for matrix diffusion
 *  LCOE                   Read value for external concentration
+*  LFOF                   Read value for formation factor
 *  LPOR                   Read value for porosity
 *  LCRD                   Read value for retardation coefficient    
 *  LOLTRA                 Transmissivity zone number. Auxiliary var.
@@ -104,6 +108,8 @@
 *  LOLDSP                 Dispersivity zone number. Auxiliary var.
 *  LOLDFM                 Matrix diffusion zone number. Auxiliary var.
 *  LOLCOE                 External concentration zone number. Auxiliary var.
+*  LOLFOD                 First order decay zone number. Auxiliary var.
+*  LOLFOF                 Formation factor zone number. Auxiliary var.      
 *  LOLPOR                 Porosity zone number. Auxiliary var.
 *  LOLCRD                 Retardation coeficient zone number. Auxiliary var.
 *  NOLD                   Index containing last element read.
@@ -136,7 +142,7 @@
      ;           LDIM(NUMEL),
      ;      LXTRA(NUMEL),LXARR(NUMEL),LXARRT(NUMEL),
      ;      LXSTG(NUMEL),LXDSP(NUMEL),LXDFM(NUMEL),LXCOE(NUMEL),
-     ;      LXPOR(NUMEL),LXCRD(NUMEL),LXFOD(NUMEL)
+     ;      LXPOR(NUMEL),LXCRD(NUMEL),LXFOD(NUMEL),LXFOF(NUMEL)
 
 C------------------------- FIRST EXECUTABLE STATEMENT.
 
@@ -152,6 +158,7 @@ C------------------------- Initializes auxiliary variables
        LOLCRD=0
        LOLCOE=0
        LOLFOD=0
+       LOLFOF=0
 
 C------------------------- Prepare element zone labes for writting 
 C------------------------- on MAIN file
@@ -161,7 +168,7 @@ C------------------------- on MAIN file
              WRITE(MAINF,3200)
  3200        FORMAT(//,5X,'Z O N E  N U M B E R S',/,5X,44('-'),//,
      ;          '  N.EL. TRA  STG  ARR  ART  ',
-     ;             'DSP  DFM  POR  CRD  COE  FOD'/)
+     ;             'DSP  DFM  POR  CRD  COE  FOD  FOF'/)
           ELSE
              WRITE(MAINF,3300) IPROB
  3300        FORMAT(3X,' PROBLEM NUMBER',I5)
@@ -180,8 +187,8 @@ C------------------------- Card B3.3
 
           LEAUX=LEEL(FILENAME,IUGRID,MAINF,NROW,INPWR)
           READ(LEAUX,1005,ERR=9200) NE,LTRA,LSTG,LARR,
-     ;        LARRT,LDSP,LDFM,LPOR,LCRD,LCOE,LFOD
- 1005     FORMAT(11I5)
+     ;        LARRT,LDSP,LDFM,LPOR,LCRD,LCOE,LFOD,LFOF
+ 1005     FORMAT(12I5)
  
           IF (NE.EQ.0) RETURN
 
@@ -310,10 +317,21 @@ C------------------------- Checks first order decay coef. zone number
                 IF (LFOD.GT.NZFOD.OR.LFOD.LT.0)
      ;          CALL ERROR (IERROR,IOWAR,MAINF,FILENAME,
      ;         'FIRST ORDER DECAY COEF. ZONE NUMBER IS '//
-     ;         'OUT OF BOUNDS (LXCOE)',
+     ;         'OUT OF BOUNDS (LXFOD)',
      ;          NROW,13,IUGRID,1,3.14)
 
                 CALL ASS_EVAL(NZFOD,LDFOD,LFOD,LXFOD(NE))
+
+
+C------------------------- Checks formation factor zone number
+
+                IF (LFOF.GT.NZFOF.OR.LFOF.LT.0)
+     ;          CALL ERROR (IERROR,IOWAR,MAINF,FILENAME,
+     ;         'FORMATION FACTOR. ZONE NUMBER IS '//
+     ;         'OUT OF BOUNDS (LXFOF)',
+     ;          NROW,13,IUGRID,1,3.14)
+
+                CALL ASS_EVAL(NZFOF,LDFOF,LFOF,LXFOF(NE))
              END IF
           END IF  ! IOEQT.NE.1.OR.IOFLSAT.NE.0
 
@@ -322,12 +340,12 @@ C------------------------- missing elements
 
           IF (N.NE.NE) CALL INTERP_EZNUM
      ; (INPWR    ,IOEQT    ,IOFLSAT  ,IOTRS    ,LDARR    ,LDARRT
-     ; ,LDCOE    ,LDCRD    ,LDDFM    ,LDDSP    ,LDFOD    ,LDPOR
+     ; ,LDCOE    ,LDCRD    ,LDDFM    ,LDDSP    ,LDFOD    ,LDFOF,LDPOR
      ; ,LDSTG    ,LDTRA    ,MAINF    ,N        ,NE       ,NOLD
      ; ,NUMEL    ,NZARR    ,NZCOE    ,NZCRD    ,NZDFM    ,NZDSP
-     ; ,NZFOD    ,NZPOR    ,NZSTG    ,NZTRA    ,LDIM     ,LTYPE
+     ; ,NZFOD    ,NZFOF    ,NZPOR    ,NZSTG    ,NZTRA    ,LDIM   ,LTYPE
      ; ,LXARR    ,LXARRT   ,LXCOE    ,LXCRD    ,LXDFM    ,LXDSP
-     ; ,LXFOD    ,LXPOR    ,LXSTG    ,LXTRA)
+     ; ,LXFOD    ,LXFOF    ,LXPOR    ,LXSTG    ,LXTRA    ,LXFOF)
 
 C------------------------- Defines auxiliary variables to write
 C------------------------- last read element zone numbers.
@@ -348,6 +366,7 @@ C------------------------- last read element zone numbers.
                 IF (NZCRD.NE.0) LOLCRD=LXCRD(NE)
                 IF (NZCOE.NE.0) LOLCOE=LXCOE(NE)
                 IF (NZFOD.NE.0) LOLFOD=LXFOD(NE)
+                IF (NZFOF.NE.0) LOLFOF=LXFOF(NE)
              ELSE IF(IOFLSAT.NE.0)THEN
                 IF (NZPOR.NE.0) LOLPOR=LXPOR(NE)
              ENDIF             
@@ -356,8 +375,8 @@ C------------------------- Writes last read element zone numbers
 C------------------------- on MAIN file
 
              WRITE(MAINF,1000) NE,LOLTRA,LOLSTG,LOLARR,LOLARRT,
-     ;             LOLDSP,LOLDFM,LOLPOR,LOLCRD,LOLCOE,LOLFOD
- 1000        FORMAT(11I5)
+     ;             LOLDSP,LOLDFM,LOLPOR,LOLCRD,LOLCOE,LOLFOD,LOLFOF
+ 1000        FORMAT(12I5)
           ENDIF
 
        ENDDO  !NEXT ELEMENT

@@ -214,7 +214,7 @@ F90FLAGS = -ggdb -Wall -Wtabs -g3 -finit-local-zero
 #Release
 #F90FLAGS = -O3 -finit-local-zero 
 LDFLAGS = 
-PYFLAGS =  -fno-lto `python3-config --ldflags` -lpython3.6
+PYFLAGS =  -fno-lto `python3-config --ldflags --embed` 
 PYFLAGS =  `python3-config --ldflags` 
 .SUFFIXES : .o .f .f90 .FOR .F90 .mod
 

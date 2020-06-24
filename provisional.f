@@ -149,6 +149,7 @@
 *  NZDMT                  Number of matrix diffusion zones                      
 *  NZDSP                  Number of dispersivity zones                          
 *  NZFOD                  Number of zones of first order decay                  
+*  NZFOF                  Number of zones of formation factor                  
 *  NZPOR                  Number of porosity zones                              
 *  NZPRG                  Total number of generic parameter zones               
 *  NZQQP                  Number of prescribed flow zones                       

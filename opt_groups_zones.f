@@ -227,15 +227,16 @@ C_______________________ Step 0: Declaration of variables
      ;         ,IO_CHECK_POS_GS
      ;         ,MXSB_GS(3),NDISC_GS(3)
                                                                     ! Characters
-      CHARACTER FILENAME(20)*20,LEAUX*100,LEEL*100,CHARTYPE(10)*3
-     ;         ,CHARTYPE2(15)*3
+      CHARACTER FILENAME(20)*20,LEAUX*100,LEEL*100,CHARTYPE(11)*3
+     ;         ,CHARTYPE2(17)*3
 
       DATA CHARTYPE/'TRA','STG','ARR','ART','DSL','DST','DFM','POR',
-     ;              'FOD','CRD'/   ! Pilot points. Only param. by elements
+     ;              'FOD','CRD','FOF'/   ! Pilot points. Only param. by elements
       DATA CHARTYPE2/'TRA','STG','ARR','CHP','QQP','ALF','DSL','DST'
-     ;              ,'DFM','POR','FOD','CRD','CON','AGE','DMT'/
-      
-C_______________________ Step 1: Reads FLAG variable. Not first time
+     ;              ,'DFM','POR','FOD','CRD','CON','AGE','DMT','CLK'
+     &              ,'FOF'/ 
+
+C_______________________Step 1: Reads FLAG variable. Not first time
 
       NGROUP_ZN=0                          ! Total number of group of zones read 
       FLAG=0                              ! Flag to keep reading groups of zones

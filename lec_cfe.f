@@ -4,7 +4,7 @@
      ; ,IOEQT    ,IOFLSAT  ,IOTRS    ,IOWAR    ,IUPAR    ,MAINF
      ; ,NPAREL   ,NROW     ,NUMEL    ,NZARR    ,NZCOE    ,NZCRD
      ; ,NZDFM    ,NZDSP    ,NZFOD    ,NZPOR    ,NZSTG    ,NZTRA
-     ; ,CFPAREL  ,FILENAME)
+     ; ,CFPAREL  ,FILENAME ,INFOF    ,NZFOF)
 
 *****************************************************************************
 * PURPOSE
@@ -35,7 +35,8 @@
 *                         in array variables (LXPAREL and CFPAREL)              
 *  INDSP                  Index for disperssiviy                                
 *                         in array variables (LXPAREL and CFPAREL)              
-*  INFOD                  Index for first order decay coefficient               
+*  INFOD                  Index for first order decay coefficient
+*  INFOF                  Index for formation factor                   
 *  INPOR                  Index for porosity                                    
 *                         in array variables (LXPAREL and CFPAREL)              
 *  INPWR                  Allows writing on MAIN FILE                           
@@ -58,7 +59,8 @@
 *  NZCRD                  Number of retardation coefficient zones               
 *  NZDFM                  Number of molecular difusion zones                    
 *  NZDSP                  Number of dispersivity zones                          
-*  NZFOD                  Number of zones of first order decay                  
+*  NZFOD                  Number of zones of first order decay
+*  NZFOF                  Number of zones of formation factor                
 *  NZPOR                  Number of porosity zones                              
 *  NZSTG                  Number of storage coefficient zones                   
 *  NZTRA                  Number of transmissivity zones                        
@@ -72,6 +74,7 @@
 *  DDFM                   Molecular diffusion default value.                    
 *  DDSP                   Dispersivity default value.                           
 *  DFOD                   First order decay default value.
+*  DFOD                   Formation factor default value.      
 *  DPOR                   Porosity default value.                               
 *  DSTG                   Storage default value. 
 *  DTRA                   Transmissivity default value.
@@ -92,7 +95,6 @@
        DIMENSION CFPAREL(NUMEL,NPAREL)
 
 C------------------------- FIRST EXECUTABLE STATEMENT.
-
        IF (IOEQT.NE.2) THEN
 
 *_______________________Reads flow element's coefficients
@@ -251,13 +253,13 @@ C------------------------- Initializes some auxiliar variables
 *_______________________Reads default values (CARD C3.1)
                              
           LEAUX=LEEL(FILENAME,IUPAR,MAINF,NROW,INPWR)
-          READ(LEAUX,1200,ERR=9200) DDSP,DDFM,DPOR,DCRD,DCOE,DFOD
- 1200     FORMAT (6F10.0)    
+          READ(LEAUX,1200,ERR=9200) DDSP,DDFM,DPOR,DCRD,DCOE,DFOD, DFOF
+ 1200     FORMAT (7F10.0)    
           IF (INPWR.NE.0) THEN 
              WRITE(MAINF,3400) 
  3400        FORMAT(////,10X,'ELEM.COEFF. FOR TRANSP. EQUATION',/
      ;                   10X,'================================',/)
-             WRITE(MAINF,3500) DDSP,DDFM,DPOR,DCRD,DCOE,DFOD
+             WRITE(MAINF,3500) DDSP,DDFM,DPOR,DCRD,DCOE,DFOD, DFOF
  3500        FORMAT(/,5X,'DEFAULT VALUES',/
      ;                5X,'--------------',/
      ;       5X,'DISPERSIVITY ......... =',G10.3,/
@@ -265,7 +267,8 @@ C------------------------- Initializes some auxiliar variables
      ;       5X,'POROSITY ............. =',G10.3,/
      ;       5X,'RETARD. COEFFICIENT .. =',G10.3,/
      ;       5X,'EXTERNAL CONCENT. .... =',G10.3,/
-     ;       5X,'FIRST ORDER DEC. COEF. =',G10.3)
+     ;       5X,'FIRST ORDER DEC. COEF. =',G10.3,/
+     &       5X,'FORMATION FACTOR COEF. =',G10.3)
           END IF
 
 C------------------------- Assign default values
@@ -316,7 +319,15 @@ C------------------------- Assign default values
                   CFPAREL(L,INFOD)=DFOD
                 END DO
 
-              END IF   
+             END IF
+
+             IF (DFOF.NE.0. AND .NZFOF.NE.0) THEN
+
+                DO L=1,NUMEL
+                  CFPAREL(L,INFOF)=DFOF
+                END DO
+             END IF
+
 
 *______________________Starts loop reading elem. coeff. for transp. (card C3.2)
 
@@ -329,18 +340,20 @@ C------------------------- Initializes some auxiliar variables
        AUXDF=0.D0
        AUXCR=0.D0
        AUXFO=0.D0
+       AUXFF=0.D0
 
               DO WHILE (NE.LT.NUMEL) 
                 LEAUX=LEEL(FILENAME,IUPAR,MAINF,NROW,INPWR)          
-                READ(LEAUX,1300,ERR=9300) NE,DSP,DFM,POR,CRD,COE,FOD
- 1300           FORMAT (I5,6F10.0) 
+                READ(LEAUX,1300,ERR=9300) NE,DSP,DFM,POR,CRD,COE,FOD,FOF
+ 1300           FORMAT (I5,7F10.0) 
 
 C------------------------- Writes header on MAIN file
  
                IF (NOLD.EQ.0 .AND. ((NE.NE.0 .AND. INPWR.NE.0) .OR. 
      .         INPWR.GT.1))  WRITE(MAINF,3600) 
  3600    FORMAT(//
-     ;'   ELEM    DSP       DFM       POR       CRD      COE      FOD'/)
+     ;'   ELEM    DSP       DFM       POR       CRD      COE      FOD
+     &      FOF'/)
                    
 *_______________________Checks if element numbers are in bounds
 
@@ -379,6 +392,9 @@ C------------------------- Writes header on MAIN file
                         IF (NZCOE.NE.0)
      ;                    CALL ASS_REAL_VAL (COE,DCOE,CFPAREL(NE,INCOE))
                                    
+                        IF (NZFOF.NE.0)
+     ;                    CALL ASS_REAL_VAL (FOF,DFOF,CFPAREL(NE,INFOF))
+
                      END IF
 
 *_______________________Writes missing nodes
@@ -389,10 +405,12 @@ C------------------------- Writes header on MAIN file
                          IF (NZDFM.NE.0) AUXDF=CFPAREL(N,INDFM)
                          IF (NZCRD.NE.0) AUXCR=CFPAREL(N,INCRD)
                          IF (NZFOD.NE.0) AUXFO=CFPAREL(N,INFOD)
+                         IF (NZFOF.NE.0) AUXFF=CFPAREL(N,INFOF)
                          WRITE(MAINF,3700) N,AUXDS,AUXDF,
      ;                                     CFPAREL(N,INPOR),
-     ;                                     AUXCR,CFPAREL(N,INCOE),AUXFO
- 3700                    FORMAT (I5,6G10.3)  
+     ;                                     AUXCR,CFPAREL(N,INCOE),
+     &                                     AUXFO,AUXFF
+ 3700                    FORMAT (I5,7G10.3)  
 
                       END DO
                    END IF
@@ -404,8 +422,10 @@ C------------------------- Writes header on MAIN file
                       IF (NZDFM.NE.0) AUXDF=CFPAREL(NE,INDFM)
                       IF (NZCRD.NE.0) AUXCR=CFPAREL(NE,INCRD)
                       IF (NZFOD.NE.0) AUXFO=CFPAREL(NE,INFOD)
+                      IF (NZFOF.NE.0) AUXFF=CFPAREL(NE,INFOF)
                       WRITE(MAINF,3700) NE,AUXDS,AUXDF,CFPAREL(NE,INPOR)
      ;                                 ,AUXCR,CFPAREL(NE,INCOE),AUXFO
+     &                                 ,AUXFOF
                    END IF
 
                    NOLD=NE
@@ -417,7 +437,7 @@ C------------------------- Writes header on MAIN file
 *_______________________coefficient of porosity (card C3.1) 
                                    
           LEAUX=LEEL(FILENAME,IUPAR,MAINF,NROW,INPWR)
-          READ(LEAUX,1200,ERR=9200) DDSP,DDFM,DPOR,DCRD,DCOE,DFOD
+          READ(LEAUX,1200,ERR=9200) DDSP,DDFM,DPOR,DCRD,DCOE,DFOD,DFOF
 
           IF(INPWR.NE.0)WRITE(MAINF,3800)DPOR
  3800     FORMAT(/,' DEFAULT FOR POROSITY COEFFICIENT=',E10.4,/)
@@ -435,7 +455,7 @@ C------------------------- Writes header on MAIN file
           DO WHILE(NE.LT.NUMEL)
 
             LEAUX=LEEL(FILENAME,IUPAR,MAINF,NROW,INPWR)
-            READ(LEAUX,1300,ERR=9300) NE,DSP,DFM,POR,CRD,COE,FOD
+            READ(LEAUX,1300,ERR=9300) NE,DSP,DFM,POR,CRD,COE,FOD,FOF
             
               IF(NE.LE.0.OR.NE.GT.NUMEL) THEN
                  CALL ERROR(IERROR,IOWAR,MAINF,FILENAME,

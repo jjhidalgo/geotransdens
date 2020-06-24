@@ -21,7 +21,7 @@
      ;,ICAN_CN  ,IALW_CN  ,IPAR_DIR ,NPARALG, ITYPAFLU, ITYPBFLU
      ;,ITYPCFLU ,ITYPDFLU ,ITYPATRA ,ITYPDTRA
      ;,ITYPBTRA ,ITYPFLUDSC,ITYPTRADSC,ITYPCOUPLDSC, ITYPDERIV
-     ;,IDIMDENS ,IOVRWC ,IDIMGRAVEL,NZCLK
+     ;,IDIMDENS ,IOVRWC ,IDIMGRAVEL,NZCLK,NZFOF
      &,IDIMDERH,IDIMDERC
      ; ,IDIMIVARIO_GS  ,IDIMWGT        ,IDIMZONPP_GS   ,IOINV_GS
      ; ,MXCLOSE_GS     ,MXDISC_GS      ,MXGRPZN        ,MXKRIG_GS
@@ -188,13 +188,15 @@
 *  NVAR                   Number of varioables (prim.+all secondary)
 *  NZALF                  Number of leakage zones                               
 *  NZARR                  Number of areal recharge zones                        
-*  NZCHP                  Number of prescribed head zones                       
+*  NZCHP                  Number of prescribed head zones
+*  NZCLK                  Number of zones of concentration leakage      
 *  NZCOE                  Number of external concentration zones                
 *  NZCRD                  Number of retardation Coefficient zones               
 *  NZDFM                  Number of molecular difusion zones                    
 *  NZDMT                  Number of matrix diffusion zones                      
 *  NZDSP                  Number of dispersivity zones                          
 *  NZFOD                  Number of zones of first order decay                  
+*  NZFOF                  Number of zones of formation factor
 *  NZPAR                  Total number of zones for all nodal and element       
 *                         parameters including each transmissivity tensor       
 *                         component.                                            
@@ -511,7 +513,7 @@ C------------------------- PARC, STPAR, etc
 
       IF (IOEQT.NE.2) THEN        ! Only flow or flow plus transport
           NZPAR = NZTRA*MAX(ISOT,IODIM)+NZSTG+NZARR+NZCHP+NZQQP+NZALF+
-     ;          NZPRG+NZCLK
+     ;          NZPRG+NZCLK+NZFOF
           IF (IOEQT.EQ.3) THEN
               NZPAR= NZPAR+2*NZDSP+NZPOR+NZDFM+NZCRD+NZFOD+NZCOE
           ELSE
@@ -529,7 +531,7 @@ C------------------------- transport is solved and unsaturated flow is required
 
 C------------------------- Assigns NPAREL and NPARNP
 
-      NPAREL = 11
+      NPAREL = 12
       NPARNP = 10
 
 C------------------------- Assigns index for zonal arrays: PARC, IVPAR, etc
@@ -608,9 +610,14 @@ C------------------------- Assigns index for zonal arrays: PARC, IVPAR, etc
 
       INCLK=INPRGC
       IF (NZCLK.NE.0)  THEN
-          INCLK=INPRGC+IZSUM
+         INCLK=INPRGC+IZSUM
+         IZSUM = NZCLK
       END IF
 
+      INFOF=INCLK
+      IF (NZFOF.NE.0)  THEN
+          INFOF=INCLK+IZSUM
+      END IF
 C_______________________ Geostat. inv. prob.
 C_______________________ Initialization
 
@@ -773,7 +780,8 @@ C------------------------- or indexing
      ;     'NZPAR',NZPAR,               'NZPOR',NZPOR,
      ;     'NZPRG',NZPRG,               'NZQQP',NZQQP,
      ;     'NZSTG',NZSTG,               'NZTRA',NZTRA,
-     &     'NZCLK',NZCLK,                'INCLK',INCLK,
+     &     'NZCLK',NZCLK,               'INCLK',INCLK,
+     &     'NZFOF',NZFOF,               'INFOF',INFOF,          
      ;     'INALFC',INALFC,             'INARRC',INARRC,
      ;     'INCHPC',INCHPC,             'INCOEC',INCOEC,
      ;     'INCRDC',INCRDC,             'INDFMC',INDFMC,
@@ -848,6 +856,7 @@ C------------------------- Groups indexes in array INORPAR
        INORPAR(19)=INPRGC
 *	 INORPAR(20)=INAGE
        INORPAR(21)=INCLK
+       INORPAR(22)=INFOF
 
 C------------------------- Gravity vector
 

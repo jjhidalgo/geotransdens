@@ -121,16 +121,19 @@ def RUN_ERT(concentration, porosity, dc_dp, sim_time):
     
     #ANALYTICAL COMPUTATION TO ACCOUNT FOR PETROPHYSICAL TRANSFORMATION. 
     node_por = pg.meshtools.cellDataToNodeData(meshTD, np.array(porosity))
+
     for i in range(sm.size()):
-        drhoa_drhob[i,:] = drhoa_drhob[i,:] * (1/(np.power(node_por, -(1)*m)))
-      
+        drhoa_drhob[i,:] = drhoa_drhob[i,:] * (1/(np.power(node_por, -(1)*m))) 
     for i in range(sm.size()):
         drhoa_drhob[i,:] = drhoa_drhob[i,:] * (csw - cfw)
-        
+    
+    #TO DO: check if this below works better
+    #drhoa_drhob = np.multiply(drhoa_drhob, (csw - cfw)/np.power(node_por, -m))
+
     drhoa_dp = drhoa_drhob.dot(dc_dp)
     
     end_total = time.time()
-    print("Total simulation time: "+str((end_total-start_total)/60)+' minutes')
+    print("Total simulation time: " + str((end_total-start_total)/60) + ' minutes')
 
     return np.array(rhoa), drhoa_dp
     

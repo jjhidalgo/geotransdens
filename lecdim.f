@@ -19,7 +19,7 @@
      ;!NUEVOS 
      ;,IODENS_INI      ,IODIRECT    ,IOSPARSE  ,ITPTVAR  ,LINMET
      &,IOCONSRC
-     ; , IOINV_GS ,MXGRPZN   ,MXLINCMB ,NGROUP_ZN ,IO_KG_GS ,IOPT_GS)
+     ;,IOINV_GS ,MXGRPZN   ,MXLINCMB ,NGROUP_ZN ,IO_KG_GS ,IOPT_GS)
 
 ********************************************************************************
 *
@@ -389,7 +389,7 @@ C------------------------- Card A3.3, Problem definitions options
        READ (LEAUX,1300) IOEQT,IOINV,IOTRS,IOCNSF,IORTS,IOCNST,
      ;            IOVAR,IOFOD,IODIM,IOFLLI,IOTRLI,IOINV_GS
 
- 1300  FORMAT(17I5)
+ 1300  FORMAT(18I5)
 
 C------------------------- Writes in MAIN FILE if allowed
 
@@ -467,7 +467,7 @@ C-------------------------Checks concentration source option.
      ; 5X,'SPARSE MATRIX STORAGE OPTION....................... =',I5,/,
      ; 5X,'DIRECT LINEAR SYSTEM SOLVER........................ =',I5,/,
      ; 5X,'VARIABLE DENSITY OPTION............................ =',I5,/,
-     ; 5X,'TRANPORT OF ENERGY OR MASS......................... =',I5,/
+     ; 5X,'TRANSPORT OF ENERGY OR MASS........................ =',I5,/
      & 5X,'CONCENTRATION SOURCES IN FLOW...................... =',I5,/)
 
 
@@ -587,12 +587,13 @@ C------------------------- Card A4.2
        LEAUX=LEEL(FILENAME,IUDIM,MAINF,NROW,INPWR)
 
        READ(LEAUX,1300) NZTRA,NZSTG,NZARR,NZCHP,NZQQP,NZALF,NZDSP,
-     ; NZDFM,NZPOR,NZFOD,NZCRD,NZCOE,NZDMT,NZPRG,NPARFPRG,NPARPRG,NZCLK
-
+     ; NZDFM,NZPOR,NZFOD,NZCRD,NZCOE,NZDMT,NZPRG,NPARFPRG,NPARPRG,NZCLK,
+     & NZFOF
+       
        IF (INPWR.NE.0) WRITE(MAINF,3700) 
      ;    NZTRA,NZSTG,NZARR,NZCHP,NZQQP,NZALF,NZDSP,
      ;    NZDFM,NZPOR,NZFOD,NZCRD,NZCOE,NZDMT,NZPRG,NPARFPRG,NPARPRG,
-     &    NZCLK
+     &    NZCLK,NZFOF
 
  3700  FORMAT(//,10X,'NUMBERS OF ZONES',/
      ;           10X,'================',//
@@ -612,8 +613,8 @@ C------------------------- Card A4.2
      ; 5X,'GROUP PARAMETERS.... =',I5,/
      ; 5X,'FLOW GENERIC ESTIMATED PARAMETERS=',I5,/
      ; 5X,'TOTAL GENERIC ESTIMATED PARAMETERS=',I5,/
-     ; 5X,'CONC. LEAKAGE....... =',I5)
-
+     ; 5X,'CONC. LEAKAGE....... =',I5,/
+     ; 5X,'FORMATION FACTOR.... =',I5)
 
 C------------------------- Corriges values for dimension statment relate to NPAR
        
@@ -634,7 +635,7 @@ C------------------------- Check the number of zones
      ;                      NROW,2,IUDIM,1,1.02)
           ELSE 
              IF (NZSTG.NE.0)
-     ;         CALL ERROR(IERROR,IOWAR,MAINF,FILENAME,                           ,
+     ;         CALL ERROR(IERROR,IOWAR,MAINF,FILENAME,
      ;                   'STEADY STATE, BUT THE NUMBER OF STORAGE'
      ;                 //' COEFF. ZONES IS'
      ;                 //'NOT EQUAL ZERO ',NROW,2,IUDIM,0,0.00)
@@ -706,7 +707,7 @@ C------------------------- Card A5.1
 
        READ(LEAUX,1300) IOLGTRA,IOLGSTG,IOLGARR,IOLGCHP,IOLGQQP,
      ;        IOLGALF,IOLGDSP,IOLGDFM,IOLGPOR,IOLGFOD,IOLGCRD,IOLGCOE,
-     ;        IOLGPRG,IOSUCHUM,IOLGCLK
+     ;        IOLGPRG,IOSUCHUM,IOLGCLK,IOLGFOF
 
 C------------------------- Writes in MAIN FILE if allowed
 
@@ -723,7 +724,7 @@ C------------------------- Checks option of type of measures
        IF (INPWR.NE.0) WRITE(MAINF,3800) 
      ;    IOLGTRA,IOLGSTG,IOLGARR,IOLGCHP,IOLGQQP,
      ;    IOLGALF,IOLGDSP,IOLGDFM,IOLGPOR,IOLGFOD,IOLGCRD,IOLGCOE,
-     ;    IOLGPRG,IOSUCHUM,IOLGCLK
+     ;    IOLGPRG,IOSUCHUM,IOLGCLK,IOLGFOF
 
  3800 FORMAT(////,10X,' DERIVABILITY OPTIONS',/,
      .              9X,'======================',//,
@@ -742,8 +743,9 @@ C------------------------- Checks option of type of measures
      ; 5X,'LOG-DERIVATIVE OF GENERIC PARAMETERS (YES=T/NOT=F). =',I5,/
      ; 5X,'SUCTIONS OR HUMIDITY MEASURES FOR I.PROBLEM (0=SUCTIONS)=',I5
      &,/
-     & 5X,'LOG-DERIVATIVE OF CONC. LEAKAGE (YES=T/NOT=F) .... =',I5)
-
+     & 5X,'LOG-DERIVATIVE OF CONC. LEAKAGE (YES=T/NOT=F) .... =',I5,/
+     & 5X,'LOG-DERIVATIVE OF FORMATION FACTOR (YES=T/NOT=F) . =',I5)
+      
 C------------------------- Read output options
 C------------------------- Card A6.1
 
@@ -931,7 +933,7 @@ C------------------------- Cards A8.1, A8.2
 1410   FORMAT (I5,3F10.0,2I5)
 
 C------------------------- Reads weighting coefficients
-C------------------------- Cards A9.1 and A9,2
+C------------------------- Cards A9.1 and A9.2
 
        CALL SRC_NCARD
      ; (IERROR   ,IOWAR    ,IUDIM    ,MAINF    ,NROW     ,NCARD(10)
@@ -944,7 +946,7 @@ C------------------------- Cards A9.1 and A9,2
        LEAUX=LEEL(FILENAME,IUDIM,MAINF,NROW,INPWR)
        READ(LEAUX,1500)   !Card A9.2
      ;     XLAMDSP,XLAMDFM,XLAMPOR,XLAMFOD,XLAMCRD,XLAMCOE,XLAMPRGT,
-     &     XLAMCLK
+     &     XLAMCLK, XLAMFOF
 
        LEAUX=LEEL(FILENAME,IUDIM,MAINF,NROW,INPWR)
        READ(LEAUX,1500)   !Card A9.2b
@@ -959,7 +961,7 @@ C------------------------- Echoes a WARNING if XLAMHEAD is not 1.0
      ; (IERROR,IOWAR,MAINF,FILENAME,
      ;  'PIEZOMETRIC HEAD WEIGHT IS NOT 1D0',NROW,1,IUDIM,0,1.27)
 
- 1500  FORMAT (8F10.0)
+ 1500  FORMAT (9F10.0)
 C------------------------- Writes mass balance options, optimization parameters
 C------------------------- and weighting parameters in MAIN FILE
 
@@ -971,7 +973,7 @@ C------------------------- and weighting parameters in MAIN FILE
 
           WRITE(MAINF,7355) XLAMTRA,XLAMSTG,XLAMARR,XLAMCHP,
      ;        XLAMQQP,XLAMALF,XLAMPRGF,XLAMDSP,XLAMDFM,XLAMPOR,XLAMFOD,
-     ;        XLAMCRD,XLAMCOE,XLAMCLK,XLAMPRGT,XLAMHEAD,XLAMCONC
+     ;        XLAMCRD,XLAMCOE,XLAMCLK,XLAMFOF,XLAMPRGT,XLAMHEAD,XLAMCONC
      &       ,XLAMHUMI,XLAMFLOW,XLAMGEO
 
  4100     FORMAT(////,10X,'CONVERGENCE PARAMETERS',/,
@@ -1009,6 +1011,7 @@ C------------------------- and weighting parameters in MAIN FILE
      ;        ' XLAMCRD .................... =',1P,G15.5,/,
      ;        ' XLAMCOE .................... =',1P,G15.5,/,
      &        ' XLAMCLK .................... =',1P,G15.5,/,
+     &        ' XLAMFOF .................... =',1P,G15.5,/,         
      ;        ' XLAMPRGT ................... =',1P,G15.5,//,
      ;        ' PONDERATION PARAMETERS FOR STATE VAR.' ,//,
      ;        ' XLAMHEAD ................... =',1P,G15.5,/,
@@ -1486,7 +1489,7 @@ C------------------------- Number of zones
        NZONE_PAR(16)= NZDMT
 *       NZONE_PAR(17)= Z.O.D.
        NZONE_PAR(18)= NZCLK
-
+       NZONE_PAR(19)= NZFOF
 
 *_______________________Sets to zero the number of zones of flow param. 
 *_______________________if only tpt. is solved
@@ -1507,6 +1510,7 @@ C------------------------- Number of zones
            IF (IOFLSAT.NE.0) NZONE_PAR(10)=NZPOR
            NZONE_PAR(16)=0
            NZONE_PAR(18)=0
+           NZONE_PAR(19)=0
         END IF
 
 C------------------------- Initializes some variables for mass balance comput.
@@ -1515,7 +1519,7 @@ C------------------------- Initializes some variables for mass balance comput.
 
 C------------------------- Total number of zones of flow parameters
 
-     ;      NMAXF=NZONE_PAR(2)*(IODENS_INI+1)                     ! Storavity
+     ;      NMAXF=NZONE_PAR(2)*(IODENS_INI+1)      ! Storavity
      ;           +NZONE_PAR(3)                     ! Areal recharge
      ;           +NZONE_PAR(4)                     ! Prescribed head
      ;           +NZONE_PAR(5)                     ! Prescribed flow
@@ -1580,7 +1584,7 @@ C------------------------- Weighting parameters
        PAR_WGT(16)= XLAMPRGT
 *       PAR_WGT(17)= XLAMZOD???
        PAR_WGT(18)= XLAMCLK
-
+       PAR_WGT(19)= XLAMFOF
 C------------------------- Real optimization parameters 
 
        PAR_INV (1)= XMARQ
@@ -1621,6 +1625,7 @@ C------------------------- Logarithmic estimation option
 *       IOLG_PAR(15,1)= IOLGAGE
 *       IOLG_PAR(16,1)= IOLGMATDIF
        IOLG_PAR(18,1)= IOLGCLK
+       IOLG_PAR(19,1)= IOLGFOF
 
 C------------------------- Real direct problem parameters (simulation)
 

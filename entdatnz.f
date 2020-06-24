@@ -100,7 +100,8 @@
 *  NZCRD                  Number of retardation Coefficient zones               
 *  NZDFM                  Number of molecular difusion zones                    
 *  NZDSP                  Number of dispersivity zones                          
-*  NZFOD                  Number of zones of first order decay                  
+*  NZFOD                  Number of zones of first order decay
+*  NZFOD                  Number of zones of formation factor       
 *  NZPOR                  Number of porosity zones                              
 *  NZPRG                  Total number of generic parameter zones               
 *  NZQQP                  Number of prescribed flow zones                       
@@ -586,6 +587,31 @@ C------------------------- Reads concentration leakage coeficient
      ;,WGT_UNK       ,WGT_PAR(ISTART) ,NROW)
 
           END IF ! NZONE_PAR(18).NE.0
+
+C------------------------- Reads formation factor
+
+          NZONTOT=NZONTOT+NZONE_PAR(18)
+          NZVAR=NZONE_PAR(19)
+          IF (NZVAR.NE.0) THEN
+            ISTART=NZONTOT*IDIMWGT+1
+            ERNUM=7.30      
+            IOLGVAR=IOLG_PAR(19,1)
+            IOPBLI=IOTRLI
+            IOTIM=IORTS
+            IPOS=INORPAR(22)+1
+            VARNAME='FORMATION FACTOR '
+            CALL READ_PAR
+     ;(ERNUM         ,IDIMWGT       ,IERROR      ,INPWR   ,IOINV         
+     ;,IOLGVAR       ,IOPBLI        ,IOTIM       ,IPARDET ,IOWAR    
+     ;,ISTART        ,IUPAR         ,MAINF       ,MXGRPZN ,NFNL     
+     ;,NGROUP_ZN     ,NPAR          ,NPFNL       ,NZVAR   ,VARNAME
+     ;,PAR_WGT(19)   ,FILENAME      ,INDPAR      ,IVPAR(IPOS,4)
+     ;,IOPT_GS       ,IVPAR(IPOS,2) ,IPNT_PAR(ISTART)             
+     ;,IVPAR(IPOS,1) ,IVPAR(IPOS,3) ,NFNLPAR(IPOS)        ,NFTPAR(IPOS)
+     ;,STPAR(IPOS)   ,PARC          ,PARM        ,PARZ(IPOS)    
+     ;,WGT_UNK       ,WGT_PAR(ISTART) ,NROW)
+
+          END IF ! NZONE_PAR(19).NE.0
 
        ENDIF    !IOEQT.NE.1
 
