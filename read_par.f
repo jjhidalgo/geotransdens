@@ -38,19 +38,19 @@
 *                         option for all zones related to this parameter type
 *  IOPT_GS                Vector contaning geost. options of all groups of zones
 *  IPNT_END               Part of column 2 of array IVPAR, related to actual 
-*                         parametyer type. Contains the last useful position 
+*                         parameter type. Contains the last useful position 
 *                         at array IPNT_PAR to be used on the parameterization
 *                         of actual zonal parameter
 *  IPNT_PAR               Array contaning pointers to arrays DLT_PAR and WGT_PAR
 *                         for defining linear combinations of unknowns
 *  IPNT_START             Part of column 1 of array IVPAR, related to actual 
-*                         parametyer type. Contains the first useful position 
+*                         parameter type. Contains the first useful position 
 *                         at array IPNT_PAR to be used on the parameterization
 *                         of actual zonal parameter
 *  ITYPEVAR               Part of column 2 of array IVPAR, related to actual 
 *                         parametyer type. Contains index of parameter type
 *  IVVARGRP               Part of column 4 of array IVPAR, related to actual 
-*                         parametyer type. Contains the group of zones to which
+*                         parameter type. Contains the group of zones to which
 *                         actual zone belongs to
 *  NFNLVAR                Array contaning non linear functions indexes of actual 
 *                         parameter type

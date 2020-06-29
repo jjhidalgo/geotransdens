@@ -1,0 +1,70 @@
+write_stats.f:     ;         ,IOLG_PAR(NTYPAR),IODEVICE(NDEVS+1,9),IVPAR(NZPAR,4)
+write_stats.f:     ;    ,IOLG_PAR(I)             
+stat_outp.f:     ;          ,OBSCLASS(NSTAT,NDEVS+1), IOLG_PAR(NTYPAR)
+jac_c.f:     &          ,INORPAR(NTYPAR),IOLG_PAR(NTYPAR,2),IPAR_DIR(NPARALG)
+jac_c.f:              IF (IOLG_PAR(I,2).NE.0) THEN
+jac_c.f:              END IF !IOLG_PAR(I,2).NE.0
+jac_c.f:      IF (IOLG_PAR(3,2).NE.0) THEN
+jac_c.f:      END IF ! IOLG_PAR(3,2).NE.0 (Derivatives w.r.t recharge)
+jac_c.f:      IF (IOLG_PAR(7,2).NE.0) THEN
+jac_c.f:      END IF !IOLG_PAR(7,2).NE.0
+jac_c.f:      IF (IOLG_PAR(8,2).NE.0) THEN
+jac_c.f:      END IF !IOLG_PAR(8,2).NE.0
+jac_c.f:      IF (IOLG_PAR(9,2).NE.0) THEN
+jac_c.f:      END IF !IOLG_PAR(9,2).NE.0
+jac_c.f:      IF (IOLG_PAR(10,2).NE.0) THEN
+jac_c.f:      END IF !IOLG_PAR(10,2).NE.0
+jac_c.f:      IF (IOLG_PAR(11,2).NE.0) THEN
+jac_c.f:      END IF !IOLG_PAR(11,2).NE.0
+jac_c.f:      IF (IOLG_PAR(12,2).NE.0) THEN
+jac_c.f:      END IF !IOLG_PAR(12,2).NE.0
+jac_c.f:      IF (IOLG_PAR(18,2).NE.0) THEN
+jac_c.f:      END IF !IOLG_PAR(18,2).NE.0
+jac_c.f:      IF (IOLG_PAR(13,2).NE.0) THEN
+jac_c.f:       END IF !IOLG_PAR(13,2).NE.0
+entdatnz.f:     ;          ,IOLG_PAR(NTYPAR,2),INORPAR(NTYPAR),INDPAR(NPAR)
+entdatnz.f:          IOLGTRA=IOLG_PAR(1,1)
+entdatnz.f:             IOLGVAR=IOLG_PAR(2,1)
+entdatnz.f:            IOLGVAR=IOLG_PAR(3,1)
+entdatnz.f:            IOLGVAR=IOLG_PAR(4,1)
+entdatnz.f:            IOLGVAR=IOLG_PAR(5,1)
+entdatnz.f:            IOLGVAR=IOLG_PAR(6,1)
+entdatnz.f:            IOLGVAR=IOLG_PAR(7,1)
+entdatnz.f:            IOLGVAR=IOLG_PAR(7,1)
+entdatnz.f:            IOLGVAR=IOLG_PAR(9,1)
+entdatnz.f:            IOLGVAR=IOLG_PAR(10,1)
+entdatnz.f:            IOLGVAR=IOLG_PAR(11,1)
+entdatnz.f:            IOLGVAR=IOLG_PAR(12,1)
+entdatnz.f:            IOLGVAR=IOLG_PAR(13,1)
+entdatnz.f:            IOLGVAR=IOLG_PAR(16,1)
+entdatnz.f:            IOLGVAR=IOLG_PAR(19,1)
+entdatnz.f:            IOLGVAR=IOLG_PAR(14,1)
+inver.f:     &          ,IODEVICE(NDEVS+1,10)            ,IOLG_PAR(NTYPAR,2)
+inver.f:C------------------------- Assigns IOLG_PAR(I,2) to 1 if any zone of 
+inver.f:                IOLG_PAR(J,2)=0
+inver.f:                      IF (IVPAR(I,1).NE.0) IOLG_PAR(J,2)=1
+inver.f:                         IF (IVPAR(I,1).NE.0) IOLG_PAR(J,2)=1
+provisional.f:       DIMENSION NZONE_PAR(NTYPAR),IOLG_PAR(NTYPAR),IPAR_INV(NPARALG),
+provisional.f:        IOLGPOR    =IOLG_PAR(10)
+provisional.f:        IOLGFOD    =IOLG_PAR(11)
+provisional.f:        IOLGCRD    =IOLG_PAR(12)
+provisional.f:        IOLGCOE    =IOLG_PAR(13)
+provisional.f:        IOLGPRG    =IOLG_PAR(14)
+transdens.f:       DIMENSION NZONE_PAR(NTYPAR),IOLG_PAR(NTYPAR,2),IPAR_INV(NPARALG),
+sim_jac.f:     &          ,IOLG_PAR(NTYPAR,2)           ,IOPTS(NOPTS)
+cond_est_sim.f:     ;         ,IOLG_PAR(NTYPAR),ICHECK_GS(MXNPP_GS),INORPAR(NTYPAR)
+cond_est_sim.f:                      INDPAR(NPARDET+NTOTALPP+IPIPO)=IOLG_PAR(IACTTYPE)
+cond_est_sim.f:                         IF (IOLG_PAR(IACTTYPE).NE.0) THEN  ! Log-estimation
+transin4.f:       DIMENSION NZONE_PAR(NTYPAR),IOLG_PAR(NTYPAR,2),IPAR_INV(NPARALG),
+endat.f:     ;  INDPAR(NPAR),INORPAR(NPAR),IOLG_PAR(NTYPAR,2),IOWRITE(NWRITE),
+lecdim.f:     ;   NZONE_PAR(NTYPAR),IOLG_PAR(NTYPAR,2),IPAR_INV(NPARALG),
+lecdim.f:       IOLG_PAR(10,1)= IOLGPOR
+lecdim.f:       IOLG_PAR(11,1)= IOLGFOD
+lecdim.f:       IOLG_PAR(12,1)= IOLGCRD
+lecdim.f:       IOLG_PAR(13,1)= IOLGCOE
+lecdim.f:       IOLG_PAR(14,1)= IOLGPRG
+lecdim.f:*       IOLG_PAR(15,1)= IOLGAGE
+lecdim.f:*       IOLG_PAR(16,1)= IOLGMATDIF
+lecdim.f:       IOLG_PAR(18,1)= IOLGCLK
+lecdim.f:       IOLG_PAR(19,1)= IOLGFOF
+geo_calc.f:     ;         ,INDPAR(NPAR),IOLG_PAR(NTYPAR),IPOLDRIFT_GS(9,NGROUP_ZN)

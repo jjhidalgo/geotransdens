@@ -118,3 +118,7 @@ ENV/
 # emacs back up files
 *~
 geotransdens
+# simulations output
+*.OUT
+*.out
+*.vtk

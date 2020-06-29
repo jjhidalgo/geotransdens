@@ -1,7 +1,7 @@
-      SUBROUTINE CALC_GIMLI                                              &
-     &           (CCAL     ,DCDP     ,DRESDP   ,IFLAGS   ,NDEVGEO        &
-     &           ,NFLAGS   ,NPAR     ,NUMEL    ,NUMNP    ,POROSITY       &
-     &           ,RESCAL   ,TABSOLUT)
+      SUBROUTINE CALC_GIMLI                                                        &
+     &           (CCAL     ,DCDP     ,DERFOFAUX,DRESDFOF ,DRESDP   ,IFLAGS         &
+     &           ,IODERFOF ,FOFZONES ,NDEVGEO  ,NFLAGS   ,NPAR     ,NUMEL          &
+     &           ,NUMNP    ,NZFOF    ,POROSITY ,RESCAL   ,TABSOLUT)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !     PURPOSE
 !     
@@ -15,6 +15,8 @@
 !     POROSITY               Porosity at every element.
 !     DCDP                   Derivative of the concentration at every node
 !                            with respect to the parameters.
+!     DRESDFOF               Derivative of resisitivity at the observation points with
+!                            respect to the formation factor zonal parameter.
 !     DRESDP                 Derivative of resisitivity at the observation points with
 !                            respect to the parameters.
 !     IFLAGS                 Array with different writing options. Used mainly for 
@@ -66,13 +68,13 @@
 
 !-------------------------External variables
 
-      INTEGER*4::NDEVGEO, NPAR, NFLAGS, NUMNP, NUMEL
+      INTEGER*4::IODERFOF,NDEVGEO, NPAR, NFLAGS, NUMNP, NUMEL, NZFOF
 
       REAL*8:: TABSOLUT
-      INTEGER*4::IFLAGS(NFLAGS)
+      INTEGER*4::IFLAGS(NFLAGS),FOFZONES(NUMEL)
 
-      REAL*8::CCAL(NUMNP), POROSITY(NUMEL), DCDP(NUMNP,NPAR)
-      REAL*8::DRESDP(NDEVGEO,NPAR), RESCAL(NDEVGEO)
+      REAL*8::CCAL(NUMNP), POROSITY(NUMEL), DCDP(NUMNP,NPAR),DERFOFAUX(NUMEL)
+      REAL*8::DRESDFOF(NDEVGEO,NZFOF), DRESDP(NDEVGEO,NPAR), RESCAL(NDEVGEO)
 
      
 !-------------------------Internal variables

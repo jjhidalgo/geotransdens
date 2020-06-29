@@ -1,0 +1,2822 @@
+write_stats.f:     ;,INORPAR2 ,IODEVICE    ,IOLG_PAR   ,ITYPEPAR  ,IVPAR     
+write_stats.f-     ;,OBSCLASS ,PARC        ,RESID      ,RESIDPAR  ,STAT     
+write_stats.f-     ;,TOBS     ,TYPENAME    ,VOBSC
+write_stats.f-     ;!NUEVOS
+write_stats.f-     ;,IDIMWGT  ,IPNT_PAR    ,COVAR      ,IDIMHESS  ,STPAR)
+write_stats.f-
+--
+write_stats.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+write_stats.f-*  IODEVICE               Column 1: Data type                                   
+write_stats.f-*                         Column 2: Status for calc. of obs.                    
+write_stats.f-*                         Column 3: Method of spat. integr.                     
+write_stats.f-*                         Column 4: Method of temp. integr.                     
+write_stats.f-*                         Column 5: Number of integr. time                      
+--
+write_stats.f:*  IVPAR                  Vector containing estimation index for all            
+write_stats.f-*                         parameters                                            
+write_stats.f-*  OBSCLASS               Array containing number of devices where a particular
+write_stats.f-*                         type of state var. was measured
+write_stats.f-*                         COLUMN 1 contains number of devices, while COLUMNS 2-?
+write_stats.f-*                         contain identifiers to those devices
+--
+write_stats.f:     ;         ,IOLG_PAR(NTYPAR),IODEVICE(NDEVS+1,9),IVPAR(NZPAR,4)
+write_stats.f-     ;         ,ITYPEPAR(NPAR,2),IPNT_PAR(NZPAR*IDIMWGT)
+write_stats.f-                                                   ! Internal variables: scalars
+write_stats.f-      REAL*8 COBJF,WOBJF,STDEV,STDDEV,PARAMVAL
+write_stats.f-      INTEGER*4 I,J,NUM,NOL,NOF,NOFOBS,K,HISTOGRAM, ZONENR,IPAR,IPLACE
+write_stats.f-     ;         ,IPOS
+--
+write_stats.f:     ;(MAINF,NTYPAR,NZPAR,INORPAR2,IVPAR,STAT,TYPENAME)
+write_stats.f-      
+write_stats.f-
+write_stats.f-      IF (IODETHESSOK.EQ. 1) 
+write_stats.f-     ;   WRITE(MAINF,2500)
+write_stats.f- 2500 FORMAT(//,' WARNING: HESSIAN MATRIX IS NOT POSITIVE DEFINITE',/
+--
+write_stats.f:            IF(IVPAR(J,1) .NE. 0) THEN
+write_stats.f:		     DO K= IVPAR(J,1) ,IVPAR(J,2)
+write_stats.f-			    IF(IPNT_PAR(K).EQ.I) THEN
+write_stats.f-				    LPARESTIM = .TRUE. ! Some of this class are estim.
+write_stats.f-	            ENDIF
+write_stats.f-	         ENDDO
+write_stats.f-	      ENDIF
+--
+write_stats.f:*	      NGROUPS= MAX(NGROUPS,IVPAR(I,3))
+write_stats.f-*	   ENDDO
+write_stats.f-
+write_stats.f-*         DO IGROUP =1,NGROUPS
+write_stats.f-*	      DO I=1,NZPAR
+write_stats.f:*	         IF (IVPAR(I,3).EQ.IGROUP) THEN
+write_stats.f-*	            LPARESTIM = .TRUE.
+write_stats.f:*    	            IF (IVPAR(I,1).NE.0) THEN
+write_stats.f:*			       DO K= IVPAR(I,1),IVPAR(I,2)
+write_stats.f-*			       	 IF (IPNT_PAR(K).NE.I .AND. IPNT_PAR(K).NE.0)
+write_stats.f-*     ;                 LPARESTIM = .FALSE.
+write_stats.f-*			       ENDDO
+write_stats.f-*		         ENDIF
+write_stats.f-
+--
+write_stats.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+write_stats.f:*  IVPAR                  Vector containing estimation index for all            
+write_stats.f-*                         parameters  
+write_stats.f-*  MATRIX                 The matrix that is to be printed
+write_stats.f-*  TYPENAME               Array containing  the names of the state var. and 
+write_stats.f-*                         parameter types in the same order as OBSCLASS and STAT
+write_stats.f-*
+--
+write_stats.f:*  INDEX                  The index of a parameter in ivpar.
+write_stats.f-*  KLO                    Dummy counter for do loops
+write_stats.f-*  MATCOL                 The number of the matrix column that is being printed
+write_stats.f-*  MATROW                 The number of the matrix row that is being printed
+write_stats.f-*  PRINTCOL               Dummys counter for do loops.
+write_stats.f-*  ROW                    Dummys counter for do loops.
+--
+write_stats.f:* PARNO                   Array of IVPAR indexes of the parameters to which the
+write_stats.f-*                         columns currently being printed belongs
+write_stats.f:* STARTPOS                Array of indexes of position in IVPAR where a
+write_stats.f-*                         parameter type begins. Used to get the zonenr                 
+write_stats.f-* VALUE                   The value of the elements on the row being printed
+write_stats.f-*
+write_stats.f-* ZONENR                  Array of zone numbers of the parameters to which the
+write_stats.f-*                         columns currently being printed belongs
+--
+write_stats.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+write_stats.f:*  IVPAR                  Vector containing estimation index for all            
+write_stats.f-*                         parameters  
+write_stats.f-*  TYPENAME               Array containing  the names of the state var and 
+write_stats.f-*                         parameter types in the same order as STAT
+write_stats.f-*
+write_stats.f-* INTERNAL VARIABLES  ARRAYS
+--
+ass_ext_drift.f:*  IGR_ZONE               Array containing the relation zone->group (IVPAR(4))
+ass_ext_drift.f-*  INORPAR                Array containing the indexes with the location        
+ass_ext_drift.f-*                         of the different paramaters in arrays PARZ, PARM,     
+ass_ext_drift.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+ass_ext_drift.f-*  IZONMEAS_GS            Array containing the measurement identifier contained in 
+ass_ext_drift.f-*                         a given zone of a given group
+ass_ext_drift.f-*  KXX                    Node numbers of every element (counterclockwise       
+ass_ext_drift.f-*                         order).                                               
+ass_ext_drift.f-*  LNNDEL                 Number of nodes at every element                      
+--
+derclk.f:     &        ,IOCAP    ,IOFMLT   ,IOTRLI   ,IXPARNP  ,IVPAR
+derclk.f-     &        ,KXX      ,LMXNDL   ,NFLAGS   ,NFNL     ,NFNLPAR
+derclk.f-     &        ,NFNLPRG  ,NFNLTIP  ,NFTPAR   ,NINT     ,NPAR
+derclk.f-     &        ,NPARNP   ,NPPNP    ,NTYPAR   ,NUMEL    ,NUMNP
+derclk.f-     &        ,NZONE_PAR,NZPAR    ,PARACD   ,PARC     ,PARNP
+derclk.f-     ;        ,IDIMWGT  ,WGT_PAR  ,IPNT_PAR ,IPOS     ,DERIV
+--
+derclk.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+derclk.f:*  IVPAR                  Vector containing estimation index for all            
+derclk.f-*                         parameters                                            
+derclk.f-*  KXX                    Node numbers of every element (counterclockwise       
+derclk.f-*                         order).                                               
+derclk.f-*  LDIM                   Vector containing the dimension of each element       
+derclk.f-*  LNNDEL                 Number of nodes at every element                      
+--
+derclk.f:     &          ,IVPAR(NZPAR)     ,KXX(LMXNDL,NUMEL) ,NFNLPAR(NZPAR)
+derclk.f-     &          ,NFNLPRG(8,NFNL)  ,NFNLTIP(NFNL)     ,NFTPAR(NZPAR)
+derclk.f-     &          ,NZONE_PAR(NTYPAR)
+derclk.f-
+derclk.f-
+derclk.f-      REAL*8::CAUX1(NUMNP)               ,CCALAN(NUMNP)
+--
+derclk.f:          IP = IVPAR(JJ)
+derclk.f-
+derclk.f-          IF (IP.NE.0 .OR. IOTRLI.NE.0) THEN
+derclk.f-
+derclk.f-
+derclk.f-              IF (IOTRLI.NE.0) THEN
+--
+derclk.f:     &    ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG
+derclk.f-     &    ,PARACD   ,PARC(INORPAR(19)+1),CCALIT   ,CCALAN   ,XPARAM
+derclk.f-     ;    ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+derclk.f-
+derclk.f-              IF (NPTOT.GT.0) THEN
+derclk.f-
+--
+get_zone_group.f:*  IGR_ZONE               Array containing the relation zone->group (IVPAR(4))
+get_zone_group.f-*  INORPAR                Array containing the indexes with the location        
+get_zone_group.f-*                         of the different paramaters in arrays PARZ, PARM,     
+get_zone_group.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+get_zone_group.f-*  KXX                    Node numbers of every element (counterclockwise       
+get_zone_group.f-*                         order).                                               
+get_zone_group.f-*  LTYPE                  Vector containing the type of each element            
+get_zone_group.f-*  LXPAREL                Array containing zone numbers for a given             
+get_zone_group.f-*                         element parameter                                     
+--
+der_wtv_stg.f:     &           ,IOFMLF   ,IOVRWC   ,IVPAR    ,KXX      ,LDIM
+der_wtv_stg.f-     &           ,LMXNDL   ,LNNDEL   ,LXPAREL  ,NFLAGS   ,NFNL
+der_wtv_stg.f-     &           ,NINT     ,NPAR     ,NPAREL   ,NPPEL    ,NPZON
+der_wtv_stg.f-     &           ,NTYPAR   ,NUMEL    ,NUMNP    ,NZPAR    ,PARC
+der_wtv_stg.f-     &           ,PAREL    ,THETAT   ,IDIMWGT  ,WGT_PAR  ,IPNT_PAR)
+der_wtv_stg.f-
+--
+der_wtv_stg.f:      INTEGER*4::IFLAGS(NFLAGS)       ,INORPAR(NTYPAR),IVPAR(NZPAR)
+der_wtv_stg.f-     &          ,KXX(LMXNDL,NUMEL)    ,LDIM(NUMEL)    ,LNNDEL(NUMEL)
+der_wtv_stg.f-     &          ,LXPAREL(NUMEL,NPAREL),NFNLPAR(NZPAR) ,NFNLPRG(8,NFNL)
+der_wtv_stg.f-     &          ,NFNLTIP(NFNL)        ,NFTPAR(NZPAR)  ,NZONE_PAR(NTYPAR)
+der_wtv_stg.f-
+der_wtv_stg.f-
+--
+der_wtv_stg.f:     &        ,IVPAR    ,KXX      ,LDIM     ,LMXNDL   ,LNNDEL
+der_wtv_stg.f-     &        ,LXPAREL  ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG
+der_wtv_stg.f-     &        ,NFNLTIP  ,NFTPAR   ,NINT     ,NPAR     ,NPAREL   
+der_wtv_stg.f-     &        ,NPPEL    ,NPZON    ,NTYPAR   ,NUMEL    ,NUMNP    
+der_wtv_stg.f-     &        ,NZONE_PAR,NZPAR    ,PARACD   ,PARC     ,PAREL
+der_wtv_stg.f-     &        ,THETAT   ,WGT_PAR)
+--
+der_wtv_stg.f:     &        ,IODENS   ,IOFLLI   ,IOFMLF   ,IPNT_PAR ,IVPAR
+der_wtv_stg.f-     &        ,KXX      ,LDIM     ,LMXNDL   ,LNNDEL   ,LXPAREL
+der_wtv_stg.f-     &        ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG  ,NFNLTIP
+der_wtv_stg.f-     &        ,NFTPAR   ,NINT     ,NPAR     ,NPAREL   ,NPPEL
+der_wtv_stg.f-     &        ,NPZON    ,NTYPAR   ,NUMEL    ,NUMNP    ,NZONE_PAR
+der_wtv_stg.f-     &        ,NZPAR    ,PARACD   ,PARC     ,PAREL    ,THETAT
+--
+der_wtv_stg.f:     &         ,IVPAR    ,KXX      ,LDIM     ,LMXNDL   ,LNNDEL
+der_wtv_stg.f-     &         ,LXPAREL  ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG
+der_wtv_stg.f-     &         ,NFNLTIP  ,NFTPAR   ,NINT     ,NPAR     ,NPAREL   
+der_wtv_stg.f-     &         ,NPPEL    ,NPZON    ,NTYPAR   ,NUMEL    ,NUMNP    
+der_wtv_stg.f-     &         ,NZONE_PAR,NZPAR    ,PARACD   ,PARC     ,PAREL
+der_wtv_stg.f-     &         ,THETAT   ,WGT_PAR)
+--
+der_wtv_stg.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+der_wtv_stg.f:*  IVPAR                  Vector containing estimation index for all            
+der_wtv_stg.f-*                         parameters                                            
+der_wtv_stg.f-*  KXX                    Node numbers of every element (counterclockwise       
+der_wtv_stg.f-*                         order).                                               
+der_wtv_stg.f-*  LDIM                   Vector containing the dimension of each element       
+der_wtv_stg.f-*  LNNDEL                 Number of nodes at every element                      
+--
+der_wtv_stg.f:      INTEGER*4::IFLAGS(NFLAGS)       ,INORPAR(NTYPAR),IVPAR(NZPAR)
+der_wtv_stg.f-     &          ,KXX(LMXNDL,NUMEL)    ,LDIM(NUMEL)    ,LNNDEL(NUMEL)
+der_wtv_stg.f-     &          ,LXPAREL(NUMEL,NPAREL),NFNLPAR(NZPAR) ,NFNLPRG(8,NFNL)
+der_wtv_stg.f-     &          ,NFNLTIP(NFNL)        ,NFTPAR(NZPAR)  ,NZONE_PAR(NTYPAR)
+der_wtv_stg.f-
+der_wtv_stg.f-
+--
+der_wtv_stg.f:          IP = IVPAR(JJ)
+der_wtv_stg.f-          DENSL =DENSITY(L)
+der_wtv_stg.f-
+der_wtv_stg.f-          IF (IP.GT.0 .OR. IOFLLI.NE.0) THEN
+der_wtv_stg.f-
+der_wtv_stg.f-              LD = LDIM(L)
+--
+der_wtv_stg.f:     & ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG  
+der_wtv_stg.f-     & ,PARACD   ,PARC(INORPAR(19)+1),HCALIT   ,HCALAN   ,XPARAM
+der_wtv_stg.f-     ; ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+der_wtv_stg.f-
+der_wtv_stg.f-              IF (NPTOT.GT.0) THEN
+der_wtv_stg.f-
+--
+der_wtv_stg.f:     &          ,IODENS   ,IOFLLI   ,IOFMLF   ,IPNT_PAR ,IVPAR
+der_wtv_stg.f-     &          ,KXX      ,LDIM     ,LMXNDL   ,LNNDEL   ,LXPAREL
+der_wtv_stg.f-     &          ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG  ,NFNLTIP
+der_wtv_stg.f-     &          ,NFTPAR   ,NINT     ,NPAR     ,NPAREL   ,NPPEL
+der_wtv_stg.f-     &          ,NPZON    ,NTYPAR   ,NUMEL    ,NUMNP    ,NZONE_PAR
+der_wtv_stg.f-     &          ,NZPAR    ,PARACD   ,PARC     ,PAREL    ,THETAT
+--
+der_wtv_stg.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+der_wtv_stg.f:*  IVPAR                  Vector containing estimation index for all            
+der_wtv_stg.f-*                         parameters                                            
+der_wtv_stg.f-*  KXX                    Node numbers of every element (counterclockwise       
+der_wtv_stg.f-*                         order).                                               
+der_wtv_stg.f-*  LDIM                   Vector containing the dimension of each element       
+der_wtv_stg.f-*  LNNDEL                 Number of nodes at every element                      
+--
+der_wtv_stg.f:      INTEGER*4::IFLAGS(NFLAGS)       ,INORPAR(NTYPAR),IVPAR(NZPAR)
+der_wtv_stg.f-     &          ,KXX(LMXNDL,NUMEL)    ,LDIM(NUMEL)    ,LNNDEL(NUMEL)
+der_wtv_stg.f-     &          ,LXPAREL(NUMEL,NPAREL),NFNLPAR(NZPAR) ,NFNLPRG(8,NFNL)
+der_wtv_stg.f-     &          ,NFNLTIP(NFNL)        ,NFTPAR(NZPAR)  ,NZONE_PAR(NTYPAR)
+der_wtv_stg.f-
+der_wtv_stg.f-
+--
+der_wtv_stg.f:          IP = IVPAR(JJ)
+der_wtv_stg.f-
+der_wtv_stg.f-          IF (IP.GT.0 .OR. IOFLLI.NE.0) THEN
+der_wtv_stg.f-
+der_wtv_stg.f-              LD = LDIM(L)
+der_wtv_stg.f-              LANI = LD*(LD+1)/2
+--
+der_wtv_stg.f:     & ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG  
+der_wtv_stg.f-     & ,PARACD   ,PARC(INORPAR(19)+1),HCALIT   ,HCALAN   ,XPARAM
+der_wtv_stg.f-     ; ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+der_wtv_stg.f-
+der_wtv_stg.f-              IF (NPTOT.GT.0) THEN
+der_wtv_stg.f-
+--
+stat_outp.f:     ;,IFLAGS     ,INORPAR    ,IODEVICE  ,IOLG_PAR  ,ITYPEPAR  ,IVPAR
+stat_outp.f-     ;,NZONE_PAR  ,OBSCLASS   ,PARC      ,PARM      ,PAR_WGT
+stat_outp.f-     ;,RESID      ,STPAR      ,TOBS      ,RESIDPAR  ,VJAC      ,VOBS
+stat_outp.f-     ;,VOBSC      ,WORK       ,IOINV     ,MEASTYP
+stat_outp.f-     ;!NUEVOS
+stat_outp.f-     ;,WGT_UNK    ,IPNT_PAR  ,IDIMWGT   ,IOPT_GS    ,MXGRPZN
+--
+stat_outp.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+stat_outp.f-*  IODEVICE               Column 1: Data type                                   
+stat_outp.f-*                         Column 2: Status for calc. of obs.                    
+stat_outp.f-*                         Column 3: Method of spat. integr.                     
+stat_outp.f-*                         Column 4: Method of temp. integr.                     
+stat_outp.f-*                         Column 5: Number of integr. time                      
+--
+stat_outp.f:*  IVPAR                  Vector containing estimation index for all            
+stat_outp.f-*                         parameters                                            
+stat_outp.f-*  NZONE_PAR              Array containing the number of zones of all           
+stat_outp.f-*                         parameters      
+stat_outp.f-*  OBSCLASS               Array containing number of devices where a particular
+stat_outp.f-*                         type of state var. was measured
+--
+stat_outp.f:       INTEGER*4 IODEVICE(NDEVS+1,9), INORPAR(NTYPAR), IVPAR(NZPAR,4)
+stat_outp.f-     ;          ,OBSCLASS(NSTAT,NDEVS+1), IOLG_PAR(NTYPAR)
+stat_outp.f-     ;          ,NZONE_PAR(NTYPAR),ITYPEPAR(NPAR,2) ,IOPT_GS(MXGRPZN,20)
+stat_outp.f-     ;          ,IFLAGS(NFLAGS),MEASTYP(NUMTOBS),IPNT_PAR(NZPAR*IDIMWGT)
+stat_outp.f-
+stat_outp.f-       REAL*8 VOBS(NUMTOBS), VOBSC(NUMTOBS),TOBS(NUMTOBS,2)
+--
+stat_outp.f:             IF (IVPAR(J,1) .NE.0)THEN
+stat_outp.f:	          DO K=IVPAR(J,1),IVPAR(J,2)
+stat_outp.f-	             IF (IPNT_PAR(K).EQ.J) THEN
+stat_outp.f-                       STAT(I+NSTAT,2)=PAR_WGT(1)
+stat_outp.f-                       NOFPAR= NOFPAR +1
+stat_outp.f-	             ENDIF
+stat_outp.f-	          ENDDO
+--
+stat_outp.f:             IF (IVPAR(J,1) .NE. 0)THEN
+stat_outp.f:	          DO K= IVPAR(J,1),IVPAR(J,2)
+stat_outp.f-	             IF (IPNT_PAR(K).EQ.J) THEN
+stat_outp.f-                          STAT(I+NSTAT,2)=PAR_WGT(I-NSTAT-5)
+stat_outp.f-                          NOFPAR= NOFPAR +1
+stat_outp.f-	             ENDIF
+stat_outp.f-	          ENDDO
+--
+stat_outp.f:                   IF (IVPAR(I,1).NE.0) THEN
+stat_outp.f:                      DO J=IVPAR(I,1),IVPAR(I,2)
+stat_outp.f-                         NOFPAR=IPNT_PAR(J)
+stat_outp.f-                         ITYPEPAR(NOFPAR,1)=K
+stat_outp.f-                         ITYPEPAR(NOFPAR,2)=I-INORPAR2(K)
+stat_outp.f-                      ENDDO
+stat_outp.f-                   ENDIF
+--
+stat_outp.f:     ;,IODEVICE ,IOLG_PAR    ,ITYPEPAR   ,IVPAR     ,OBSCLASS  ,PARC         
+stat_outp.f-     ;,RESID    ,RESIDPAR    ,STAT       ,TOBS      ,TYPENAME  ,VOBSC
+stat_outp.f-     ;!NUEVOS
+stat_outp.f-     ;,IDIMWGT  ,IPNT_PAR    ,HESSINV    ,IDIMHESS  ,STPAR)
+stat_outp.f-
+stat_outp.f-
+--
+principal.f:     ;,IVPAR   ,IDMBLCVP ,LXPAREL    ,IXPARNP
+principal.f-     ;
+principal.f-     ;!--------------------------------------------------- Discretization arrays
+principal.f-     ;,KXX      ,LTYPE    ,LNNDEL     ,LDIM
+principal.f-     ;,IBTCO    ,INDPAR
+principal.f-     ;!----------------------------------------------------Sparse storage arrays
+--
+principal.f:     ;,IVPAR   ,IDMBLCVP ,LXPAREL    ,IXPARNP
+principal.f-     ;
+principal.f-     ;!--------------------------------------------------- Discretization arrays
+principal.f-     ;,KXX      ,LTYPE    ,LNNDEL     ,LDIM
+principal.f-     ;,IBTCO    ,INDPAR
+principal.f-     ;!----------------------------------------------------Sparse storage arrays
+--
+principal.f:     ;,ISOZ             ,IVPAR        ,IXPARNP    ,KINT         
+principal.f-     ;,KXX              ,LDIM         ,LNNDEL     ,LTYPE        
+principal.f-     ;,LXPAREL          ,NBUW         ,NFNLPAR    ,NFNLPRG      
+principal.f-     ;,NFNLTIP          ,NFTPAR       ,NOBUF      ,NOOBSIT      
+principal.f-     ;,NZONE_PAR        ,PARACD       ,PARZ       ,PARM         
+principal.f-     ;,QXYZ             ,STPAR        ,TIME       ,TIT          
+--
+principal.f:     &           ,ITYPFLUDSC,ITYPTRADSC        ,IVPAR    ,IXPARNP
+principal.f-     &           ,KINT     ,KXX      ,LDIM
+principal.f-     &           ,LINMET   ,LMXNDL   ,LNNDEL   ,GRADLOC  ,LTYPE
+principal.f-     &           ,LXPAREL  ,MAINF    ,MAXNB    ,MAXNBF
+principal.f-     &           ,2*NUMNP  ,MAXPG    ,MEASTYP  ,NBAND
+principal.f-     &           ,NBAND1   ,NBANDCOV ,NDEVS
+--
+principal.f:     ;,IFLAGS     ,INORPAR    ,IODEVICE  ,IOLG_PAR  ,ITYPEPAR  ,IVPAR     
+principal.f-     ;,NZONE_PAR  ,OBSCLASS  ,PARC      ,PARM      ,PAR_WGT   
+principal.f-     ;,RESID      ,STPAR      ,TOBS      ,RESIDPAR  ,VJAC      ,VOBS
+principal.f-     ;,VOBSC      ,WORK       ,IOINV     ,MEASTYP
+principal.f-     ;,WGT_UNK    ,IPNT_PAR  ,IDIMWGT   ,IOPT_GS,MXGRPZN
+principal.f-     ;,NPARDET)
+--
+comp_obs_geo.f:                     IP = IVPAR(JJ)
+comp_obs_geo.f-                     IF (IP.GT.0) THEN
+comp_obs_geo.f:                        DO I=IVPAR(JJ,1),IVPAR(JJ,2) 
+comp_obs_geo.f-                           DERIV=DERESDF(IZON)
+comp_obs_geo.f:                           IF (IVPAR(JJ,4).EQ.1) THEN 
+comp_obs_geo.f-                              DERIV=DERIV*PARAMC*DLOG(10.0D0)
+comp_obs_geo.f-                           ENDIF
+comp_obs_geo.f-                           IPOS=IPNT_PAR(I) 
+comp_obs_geo.f-                           VJAC(NO, IPOS) = DERIV 
+comp_obs_geo.f:                        ENDDO   !I=IVPAR(JJ,1),IVPAR(JJ,2) 
+comp_obs_geo.f-                     ENDIF      !IP.GT.0
+comp_obs_geo.f-                  ENDDO         !IZON
+comp_obs_geo.f-               ENDIF            ! IOLG_PAR(19,2).GT.0 .AND. NZFOF.GT.0
+comp_obs_geo.f-
+comp_obs_geo.f-            END IF              !IOINV.GT.0
+--
+derdfm.f:     &        ,IOFMLT   ,IOTRLI   ,IOVRWC   ,ITPTVAR  ,IVPAR
+derdfm.f-     &        ,KXX      ,LDIM     ,LMXNDL   ,LNNDEL   ,LXPAREL
+derdfm.f-     &        ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG  ,NFNLTIP
+derdfm.f-     &        ,NFTPAR   ,NINT     ,NPAR     ,NPAREL   ,NPPEL
+derdfm.f-     &        ,NTYPAR   ,NUMEL    ,NUMNP    ,NZONE_PAR,NZPAR
+derdfm.f-     &        ,PARACD   ,PARC     ,PAREL    ,WATVOL   ,WSPECHEAT
+--
+derdfm.f:      INTEGER*4::IFLAGS(NFLAGS)       ,INORPAR(NTYPAR),IVPAR(NZPAR)
+derdfm.f-     &          ,KXX(LMXNDL,NUMEL)    ,LDIM(NUMEL)    ,LNNDEL(NUMEL)
+derdfm.f-     &          ,LXPAREL(NUMEL,NPAREL),NFNLPAR(NZPAR) ,NFNLPRG(8,NFNL)
+derdfm.f-     &          ,NFNLTIP(NFNL)        ,NFTPAR(NZPAR)  ,NZONE_PAR(NTYPAR)
+derdfm.f-
+derdfm.f-      REAL*8::BIBI(IDIMBB,NUMEL)        ,CAUX1(NUMNP)
+--
+derdfm.f:     &        ,IVPAR    ,KXX      ,LDIM     ,LMXNDL   ,LNNDEL
+derdfm.f-     &        ,LXPAREL  ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG
+derdfm.f-     &        ,NFNLTIP  ,NFTPAR   ,NINT     ,NPAR     ,NPAREL
+derdfm.f-     &        ,NPPEL    ,NTYPAR   ,NUMEL    ,NUMNP    ,NZONE_PAR
+derdfm.f-     &        ,NZPAR    ,PARACD   ,PARC     ,PAREL    ,WATVOL
+derdfm.f-     &        ,WGT_PAR  ,WSPECHEAT)
+--
+derdfm.f:     &        ,IVPAR    ,KXX      ,LDIM     ,LMXNDL   ,LNNDEL
+derdfm.f-     &        ,LXPAREL  ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG
+derdfm.f-     &        ,NFNLTIP  ,NFTPAR   ,NINT     ,NPAR     ,NPAREL
+derdfm.f-     &        ,NPPEL    ,NTYPAR   ,NUMEL    ,NUMNP    ,NZONE_PAR
+derdfm.f-     &        ,NZPAR    ,PARACD   ,PARC     ,PAREL    ,WATVOL
+derdfm.f-     &        ,WGT_PAR  ,WSPECHEAT)
+--
+derdfm.f:     &          ,IVPAR    ,KXX      ,LDIM     ,LMXNDL   ,LNNDEL
+derdfm.f-     &          ,LXPAREL  ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG
+derdfm.f-     &          ,NFNLTIP  ,NFTPAR   ,NINT     ,NPAR     ,NPAREL
+derdfm.f-     &          ,NPPEL    ,NTYPAR   ,NUMEL    ,NUMNP    ,NZONE_PAR
+derdfm.f-     &          ,NZPAR    ,PARACD   ,PARC     ,PAREL    ,WATVOL
+derdfm.f-     &          ,WGT_PAR  ,WSPECHEAT)
+--
+derdfm.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+derdfm.f:*  IVPAR                  Vector containing estimation index for all            
+derdfm.f-*                         parameters                                            
+derdfm.f-*  KXX                    Node numbers of every element (counterclockwise       
+derdfm.f-*                         order).                                               
+derdfm.f-*  LDIM                   Vector containing the dimension of each element       
+derdfm.f-*  LNNDEL                 Number of nodes at every element                      
+--
+derdfm.f:      INTEGER*4::IFLAGS(NFLAGS)       ,INORPAR(NTYPAR),IVPAR(NZPAR)
+derdfm.f-     &          ,KXX(LMXNDL,NUMEL)    ,LDIM(NUMEL)    ,LNNDEL(NUMEL)
+derdfm.f-     &          ,LXPAREL(NUMEL,NPAREL),NFNLPAR(NZPAR) ,NFNLPRG(8,NFNL)
+derdfm.f-     &          ,NFNLTIP(NFNL)        ,NFTPAR(NZPAR)  ,NZONE_PAR(NTYPAR)
+derdfm.f-
+derdfm.f-      REAL*8::BIBI(IDIMBB,NUMEL)        ,CAUX1(NUMNP)
+--
+derdfm.f:          IP = IVPAR(JJ)
+derdfm.f-
+derdfm.f-          IF (IP.NE.0 .OR. IOTRLI.NE.0) THEN
+derdfm.f-
+derdfm.f-              NNUD = LNNDEL(L)
+derdfm.f-              LD = LDIM(L)
+--
+derdfm.f:     &    ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG
+derdfm.f-     &    ,PARACD   ,PARC(INORPAR(19)+1),CCALIT   ,CCALAN   ,XPARAM
+derdfm.f-     ;    ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+derdfm.f-
+derdfm.f-              IF (NPTOT.GT.0) THEN
+derdfm.f-
+--
+derdfm.f:     &          ,IVPAR    ,KXX      ,LDIM     ,LMXNDL   ,LNNDEL
+derdfm.f-     &          ,LXPAREL  ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG
+derdfm.f-     &          ,NFNLTIP  ,NFTPAR   ,NINT     ,NPAR     ,NPAREL
+derdfm.f-     &          ,NPPEL    ,NTYPAR   ,NUMEL    ,NUMNP    ,NZONE_PAR
+derdfm.f-     &          ,NZPAR    ,PARACD   ,PARC     ,PAREL    ,WATVOL
+derdfm.f-     &          ,WGT_PAR  ,WSPECHEAT)
+--
+derdfm.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+derdfm.f:*  IVPAR                  Vector containing estimation index for all            
+derdfm.f-*                         parameters                                            
+derdfm.f-*  KXX                    Node numbers of every element (counterclockwise       
+derdfm.f-*                         order).                                               
+derdfm.f-*  LDIM                   Vector containing the dimension of each element       
+derdfm.f-*  LNNDEL                 Number of nodes at every element                      
+--
+derdfm.f:      INTEGER*4::IFLAGS(NFLAGS)       ,INORPAR(NTYPAR),IVPAR(NZPAR)
+derdfm.f-     &          ,KXX(LMXNDL,NUMEL)    ,LDIM(NUMEL)    ,LNNDEL(NUMEL)
+derdfm.f-     &          ,LXPAREL(NUMEL,NPAREL),NFNLPAR(NZPAR) ,NFNLPRG(8,NFNL)
+derdfm.f-     &          ,NFNLTIP(NFNL)        ,NFTPAR(NZPAR)  ,NZONE_PAR(NTYPAR)
+derdfm.f-
+derdfm.f-      REAL*8::BIBI(IDIMBB,NUMEL)        ,CAUX1(NUMNP)
+--
+derdfm.f:          IP = IVPAR(JJ)
+derdfm.f-
+derdfm.f-          IF (IP.NE.0 .OR. IOTRLI.NE.0) THEN
+derdfm.f-              NNUD = LNNDEL(L)
+derdfm.f-              LD = LDIM(L)
+derdfm.f-
+--
+derdfm.f:     &    ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG
+derdfm.f-     &    ,PARACD   ,PARC(INORPAR(19)+1),CCALIT   ,CCALAN   ,XPARAM
+derdfm.f-     ;    ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+derdfm.f-
+derdfm.f-              IF (NPTOT.GT.0) THEN
+derdfm.f-
+--
+difmat_mz.f:     .(  NDPAR,  MAINF,  IVPAR,  PARC,INORPAR,NZONE_PAR, NTYPAR, NZPAR,
+difmat_mz.f-     .   IOINV, IERR)
+difmat_mz.f-
+difmat_mz.f-************************************************************************
+difmat_mz.f-* PURPOSE
+difmat_mz.f-*
+--
+difmat_mz.f:*        3rd : Assign global zone number from IVPAR to MZ_PAR_NUM
+difmat_mz.f-*
+difmat_mz.f-*   ARGUMENTS
+difmat_mz.f-*
+difmat_mz.f-*        NDPAR               NDPAR=1 for DFM, 2 for CRD, 3 for XLA and 4 for POR
+difmat_mz.f-*        MAINF               Output unit number
+difmat_mz.f:*        IVPAR (NZPAR)       Global number of all parameters
+difmat_mz.f-*        PARC (NZPAR)        Current value of all parameters
+difmat_mz.f-*        INORPAR (NTYPAR)    Pointers to each type of parameters
+difmat_mz.f-*        NZONE_PAR(NTYPAR)    Number of zones of each type of parameters
+difmat_mz.f-*        NTYPAR              Number of types of parameters
+difmat_mz.f-*        NZPAR               Total number of parameters
+--
+difmat_mz.f:      INTEGER NDPAR , MAINF , IVPAR , INORPAR , NZONE_PAR ,
+difmat_mz.f-     .        NTYPAR , NZPAR , IERR , NTYP(8) , IZN , IZMN, IP,
+difmat_mz.f-     .        NZ   ,IOINV
+difmat_mz.f-      REAL*8 PARC 
+difmat_mz.f-      CHARACTER *10 NOM_PAR(4)
+difmat_mz.f-
+difmat_mz.f:      DIMENSION IVPAR(NZPAR) , PARC(NZPAR) , INORPAR(NTYPAR) , 
+difmat_mz.f-     .          NZONE_PAR(NTYPAR)
+difmat_mz.f-
+difmat_mz.f-      DATA NTYP/14,17,16,15,9,12,11,10/, ! Misterious numbers of parameter types
+difmat_mz.f-                               ! only known to Agustin Medina and Andres Alcolea
+difmat_mz.f-     .     NOM_PAR/'DIFF.COEFF','RETRDATION','DECAY COEF',' POROSITY '/
+--
+difmat_mz.f:* .............................. and global zone number from IVPAR to MZ_PAR_NUM
+difmat_mz.f-
+difmat_mz.f-         IF (NDPAR.EQ.1) THEN
+difmat_mz.f-                                                    ! Diffusion coefficient, Dm
+difmat_mz.f-            DFM_MZ = PARC(IP+IZN)             
+difmat_mz.f-            MZ_PAR_NUM(NDPAR) = 0 
+--
+difmat_mz.f:               MZ_PAR_NUM(NDPAR) = IVPAR(IP+IZN)
+difmat_mz.f:               IF (IVPAR(IP+IZN).GT.0) MZ_EST=MZ_EST+1
+difmat_mz.f-            END IF
+difmat_mz.f-            MZ_ZON_NUM(NDPAR)=IP+IZN
+difmat_mz.f-
+difmat_mz.f-         ELSE IF (NDPAR.EQ.2) THEN
+difmat_mz.f-                                                               ! Retardation, Rm
+--
+difmat_mz.f:                  MZ_PAR_NUM(NDPAR) = IVPAR(IP+IZN)
+difmat_mz.f:                  IF (IVPAR(IP+IZN).GT.0) MZ_EST=MZ_EST+1
+difmat_mz.f-               END IF
+difmat_mz.f-               MZ_ZON_NUM(NDPAR)=IP+IZN
+difmat_mz.f-            END IF
+difmat_mz.f-
+difmat_mz.f-         ELSE IF (NDPAR.EQ.3) THEN
+--
+difmat_mz.f:                  MZ_PAR_NUM(NDPAR) = IVPAR(IP+IZN)
+difmat_mz.f:                  IF (IVPAR(IP+IZN).GT.0) MZ_EST=MZ_EST+1
+difmat_mz.f-               END IF
+difmat_mz.f-               I_LM_MZ=1
+difmat_mz.f-               MZ_ZON_NUM(NDPAR)=IP+IZN
+difmat_mz.f-               XLAM_D = XLA_MZ * CRD_MZ * ESP_MZ * ESP_MZ / DFM_MZ
+difmat_mz.f-            END IF
+--
+difmat_mz.f:               MZ_PAR_NUM(NDPAR) = IVPAR(IP+IZN)
+difmat_mz.f:               IF (IVPAR(IP+IZN).GT.0) MZ_EST=MZ_EST+1
+difmat_mz.f-            END IF
+difmat_mz.f-            MZ_ZON_NUM(NDPAR)=IP+IZN
+difmat_mz.f-
+difmat_mz.f-         END IF ! (NDPAR.EQ...)
+difmat_mz.f-
+--
+init_integ.f:*             PARZ, PARC, PARM, IVPAR, NFTPAR, STPAR and FNTPAR. Also, calculates
+init_integ.f-*             main dimensions of arrays related to geostatistics
+init_integ.f-*
+init_integ.f-* EXTERNAL VARIABLES: ARRAYS
+init_integ.f-*
+init_integ.f-*  INORPAR                Array containing the indexes with the location        
+--
+init_integ.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR 
+init_integ.f-*
+init_integ.f-* INTERNAL VARIABLES: ARRAYS
+init_integ.f-*
+init_integ.f-*  INTRAC                 Array containing the location of first transmissivity 
+init_integ.f-*                         zone (for each tensor component) in array             
+--
+init_integ.f:C------------------------- Assigns index for zonal arrays: PARC, IVPAR, etc
+init_integ.f-
+init_integ.f-      INTRAC(:)=0
+init_integ.f-
+init_integ.f-      DO I=2,MAX (ISOT,IODIM)
+init_integ.f-          INTRAC(I)= INTRAC(I-1)+NZTRA
+--
+jac_c.f:     &          ,ITYPAFLU ,ITYPATRA ,ITYPDFLU ,ITYPDTRA ,IVPAR
+jac_c.f-     &          ,IXPARNP  ,IXPARFL  ,KXX      ,LDIM     ,LMXNDL,LNNDEL
+jac_c.f-     &          ,LTYPE    ,LXPAREL  ,LXPARFL  ,MAINF    ,MAXNB
+jac_c.f-     &          ,MAXNBF   ,MAXPG    ,NBAND1   ,NFLAGS   ,NFNL
+jac_c.f-     &          ,NFNLPAR  ,NFNLPRG  ,NFNLTIP  ,NFTPAR   ,NINT
+jac_c.f-     &          ,NPAR     ,NPARALG  ,NPAREL   ,NPARF    ,NPARNP
+--
+jac_c.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+jac_c.f-*  ISOZ                   Anisotropy of every transmissivity zone               
+jac_c.f:*  IVPAR                  Vector containing estimation index for all            
+jac_c.f-*                         parameters                                            
+jac_c.f-*  IXPARNP                Array containing zone number of each node j,          
+jac_c.f-*                         corresponding to INpar index parameter zone.          
+jac_c.f-*  KXX                    Node numbers of every element (counterclockwise       
+jac_c.f-*                         order).                                               
+--
+jac_c.f:     &          ,ISOZ(NZTRA),IVPAR(NZPAR),IXPARNP(NUMNP,NPARNP)
+jac_c.f-     &          ,KXX(LMXNDL,NUMEL),LDIM(NUMEL),IXPARFL(NUMNP,NPARNP)
+jac_c.f-     &          ,LNNDEL(NUMEL),LTYPE(NUMEL),LXPAREL(NUMEL,NPAREL)
+jac_c.f-     &          ,LXPARFL(NUMEL,NPAREL),NFNLPAR(NZPAR),NFNLPRG(8,NFNL)
+jac_c.f-     &          ,NFNLTIP(NFNL),NFTPAR(NZPAR),NZONE_PAR(NTYPAR)
+jac_c.f-     &          ,LINMET(*)
+--
+jac_c.f:     &                ,ISOZ     ,IVPAR    ,KXX      ,LDIM     ,LMXNDL
+jac_c.f-     &                ,LNNDEL   ,LTYPE    ,LXPARFL  ,MAINF    ,MAXPG
+jac_c.f-     &                ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG  ,NFNLTIP
+jac_c.f-     &                ,NFTPAR   ,NINT     ,NPAR     ,NPAREL   ,NTYPAR
+jac_c.f-     &                ,NUMEL    ,NUMNP    ,NZONE_PAR,NZPAR    ,NZTRA
+jac_c.f-     &                ,PARACD   ,PARC     ,POINTWEIGHT
+--
+jac_c.f:     &          ,IOFLLI   ,IOFMLF   ,ISOZ     ,IVPAR    ,KXX
+jac_c.f-     &          ,LDIM     ,LMXNDL   ,LNNDEL   ,LTYPE    ,LXPARFL
+jac_c.f-     &          ,MAXPG    ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG
+jac_c.f-     &          ,NFNLTIP  ,NFTPAR   ,NINT     ,NPAR     ,NPAREL
+jac_c.f-     &          ,NPPNP    ,NTYPAR   ,NTYPEL   ,NUMEL    ,NUMNP
+jac_c.f-     &          ,NZONE_PAR,NZPAR    ,NZONE_PAR(1)       ,PARACD
+--
+jac_c.f:     &          ,IODENS   ,IOFLLI   ,IOFMLF   ,IOVRWC   ,IVPAR
+jac_c.f-     &          ,KXX      ,LMXNDL   ,LNNDEL   ,LTYPE    ,LXPARFL(1,2)
+jac_c.f-     &          ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG  ,NFNLTIP
+jac_c.f-     &          ,NFTPAR   ,NINT     ,NPAR     ,NPAREL   ,NPPNP
+jac_c.f-     &          ,1        ,NTYPAR   ,NUMEL    ,NUMNP    ,NZONE_PAR
+jac_c.f-     &          ,NZPAR    ,PARACD   ,PARC     ,PARNP    ,IDIMWGT
+--
+jac_c.f:     &                ,IOFMLF   ,IVPAR    ,KXX      ,LMXNDL   ,LNNDEL
+jac_c.f-     &                ,LXPARFL(1,3+ISSFL) ,NFLAGS   ,NFNL     ,NFNLPAR
+jac_c.f-     &                ,NFNLPRG  ,NFNLTIP  ,NFTPAR   ,NINT     ,NPAR
+jac_c.f-     &                ,NPAREL   ,NPPEL    ,NPPNP    ,1        ,NTYPAR
+jac_c.f-     &                ,NUMEL    ,NUMNP    ,NZONE_PAR,NZPAR    ,PARACD
+jac_c.f-     &                ,PARC     ,PAREL    ,PARNP    ,IDIMWGT  ,WGT_PAR
+--
+jac_c.f:     &               ,IOFMLF   ,IVPAR    ,IXPARFL  ,KXX      ,LMXNDL
+jac_c.f-     &               ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG  ,NFNLTIP
+jac_c.f-     &               ,NFTPAR   ,NINT     ,NPAR     ,NPARNP   ,NPPNP
+jac_c.f-     7               ,1        ,NTYPAR   ,NUMEL    ,NUMNP    ,NZONE_PAR
+jac_c.f-     &               ,NZPAR    ,PARACD   ,PARC     ,PARNP    ,IDIMWGT
+jac_c.f-     &               ,WGT_PAR  ,IPNT_PAR ,IPOS    ,DERIV)
+--
+jac_c.f:     &                ,IOFMLF   ,IOVRWC   ,IVPAR    ,KXX      ,LDIM
+jac_c.f-     &                ,LMXNDL   ,LNNDEL   ,LXPAREL  ,NFLAGS   ,NFNL
+jac_c.f-     &                ,NINT     ,NPAR     ,NPAREL   ,NPPEL    ,1
+jac_c.f-     &                ,NTYPAR   ,NUMEL    ,NUMNP    ,NZPAR    ,PARC
+jac_c.f-     &                ,PAREL    ,THETAT   ,IDIMWGT  ,WGT_PAR  ,IPNT_PAR)
+jac_c.f-
+--
+jac_c.f:     &        ,IFLAGS   ,INORPAR  ,IVPAR    ,KXX      ,LDIM     ,LNNDEL
+jac_c.f-     &        ,LXPARFL  ,NFNLPAR  ,NFNLPRG  ,NFNLTIP  ,NFTPAR
+jac_c.f-     &        ,NZONE_PAR,PARACD   ,PARC     ,PAREL    ,IODENS   ,DENSREF
+jac_c.f-     &        ,CREF     ,IDIMWGT  ,WGT_PAR  ,IPNT_PAR ,IPOS     ,DERIV)
+jac_c.f-
+jac_c.f-      END IF ! IOLG_PAR(3,2).NE.0 (Derivatives w.r.t recharge)
+--
+jac_c.f:     &        ,FNT      ,IFLAGS   ,INORPAR  ,IVPAR    ,KXX      ,LDIM
+jac_c.f-     &        ,LNNDEL   ,LXPAREL  ,NFNLPAR  ,NFNLPRG  ,NFNLTIP  ,NFTPAR
+jac_c.f-     &        ,NZONE_PAR,PARACD   ,PARC     ,QXYZ     ,IDIMWGT  ,WGT_PAR
+jac_c.f-     &        ,IPNT_PAR ,IPOS     ,DERIV)
+jac_c.f-
+jac_c.f-     
+--
+jac_c.f:     &       ,FNT      ,IFLAGS   ,INORPAR  ,IVPAR    ,KXX      ,LDIM
+jac_c.f-     &       ,LNNDEL   ,LXPAREL  ,NFNLPAR  ,NFNLPRG  ,NFNLTIP  ,NFTPAR
+jac_c.f-     &       ,NZONE_PAR,PARACD   ,PARC     ,QXYZ     ,IDIMWGT  ,WGT_PAR
+jac_c.f-     &       ,IPNT_PAR ,IPOS     ,DERIV)
+jac_c.f-
+jac_c.f-      END IF !IOLG_PAR(8,2).NE.0
+--
+jac_c.f:     &        ,IOFMLT   ,IOTRLI   ,IOVRWC   ,ITPTVAR  ,IVPAR
+jac_c.f-     &        ,KXX      ,LDIM     ,LMXNDL   ,LNNDEL   ,LXPAREL
+jac_c.f-     &        ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG  ,NFNLTIP
+jac_c.f-     &        ,NFTPAR   ,NINT     ,NPAR     ,NPAREL   ,NPPEL
+jac_c.f-     &        ,NTYPAR   ,NUMEL    ,NUMNP    ,NZONE_PAR,NZPAR
+jac_c.f-     &        ,PARACD   ,PARC     ,PAREL    ,WATVOL   ,WSPECHEAT
+--
+jac_c.f:     &        ,IOVRWC   ,ITPTVAR  ,IVPAR    ,KXX      ,LDIM
+jac_c.f-     &        ,LMXNDL   ,LNNDEL   ,LXPAREL  ,NFLAGS   ,NFNL
+jac_c.f-     &        ,NFNLPAR  ,NFNLPRG  ,NFNLTIP  ,NFTPAR   ,NINT
+jac_c.f-     &        ,NPAR     ,NPAREL   ,NPPEL    ,NTYPAR   ,NUMEL
+jac_c.f-     7        ,NUMNP    ,NZONE_PAR,NZPAR    ,PARACD   ,PARC
+jac_c.f-     &        ,PAREL    ,THETAT   ,WSPECHEAT,WTHERMCON,IDIMWGT
+--
+jac_c.f:     &            ,IOCAP    ,IOFMLT   ,IOTRLI   ,IOVRWC   ,IVPAR
+jac_c.f-     &            ,KXX      ,LMXNDL   ,LNNDEL   ,LTYPE    ,LXPAREL(1,7)
+jac_c.f-     &            ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG  ,NFNLTIP
+jac_c.f-     &            ,NFTPAR   ,NINT     ,NPAR     ,NPAREL   ,NPPNP
+jac_c.f-     &            ,NTYPAR   ,NUMEL    ,NUMNP    ,NZONE_PAR,NZPAR
+jac_c.f-     &            ,PARACD   ,PARC     ,PARNP    ,IDIMWGT  ,WGT_PAR
+--
+jac_c.f:     &        ,IOTRLI   ,IOVRWC   ,IVPAR    ,KXX      ,LDIM
+jac_c.f-     &        ,LMXNDL   ,LNNDEL   ,LXPAREL  ,NFLAGS   ,NFNL
+jac_c.f-     &        ,NFNLPAR  ,NFNLPRG  ,NFNLTIP  ,NFTPAR   ,NINT
+jac_c.f-     &        ,NPAR     ,NPAREL   ,NPPEL    ,NTYPAR   ,NUMEL
+jac_c.f-     &        ,NUMNP    ,NZONE_PAR,NZPAR    ,PARACD   ,PARC
+jac_c.f-     &        ,PAREL    ,WATVOL   ,IDIMWGT  ,WGT_PAR  ,IPNT_PAR
+--
+jac_c.f:     &          ,IOFMLT   ,IOTRLI   ,IOVRWC   ,ITPTVAR  ,IVPAR
+jac_c.f-     &          ,KXX      ,LDIM     ,LMXNDL   ,LNNDEL   ,LXPAREL
+jac_c.f-     &          ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG  ,NFNLTIP
+jac_c.f-     &          ,NFTPAR   ,NINT     ,NPAR     ,NPAREL   ,NPPEL
+jac_c.f-     &          ,NTYPAR   ,NUMEL    ,NUMNP    ,NZONE_PAR,NZPAR
+jac_c.f-     &          ,PARACD   ,PARC     ,PAREL    ,THETAT   ,WSPECHEAT
+--
+jac_c.f:     &        ,IOCAP    ,IOFMLT   ,IOTRLI   ,IXPARNP  ,IVPAR
+jac_c.f-     &        ,KXX      ,LMXNDL   ,NFLAGS   ,NFNL     ,NFNLPAR
+jac_c.f-     &        ,NFNLPRG  ,NFNLTIP  ,NFTPAR   ,NINT     ,NPAR
+jac_c.f-     &        ,NPARNP   ,NPPNP    ,NTYPAR   ,NUMEL    ,NUMNP
+jac_c.f-     &        ,NZONE_PAR,NZPAR    ,PARACD   ,PARC     ,PARNP
+jac_c.f-     ;        ,IDIMWGT  ,WGT_PAR  ,IPNT_PAR ,IPOS     ,DERIV
+--
+jac_c.f:     &        ,IOCAP    ,IODENS   ,IOFMLT   ,IOTRLI   ,IVPAR
+jac_c.f-     &        ,IXPARNP  ,KXX      ,LMXNDL   ,LNNDEL   ,LXPAREL
+jac_c.f-     &        ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG  ,NFNLTIP
+jac_c.f-     &        ,NFTPAR   ,NINT     ,NPAR     ,NPAREL   ,NPARNP
+jac_c.f-     &        ,NPPEL    ,NPPNP    ,1        ,NTYPAR   ,NUMEL
+jac_c.f-     &        ,NUMNP    ,NZONE_PAR,NZPAR    ,PARACD   ,PARC
+--
+entdatnz.f:     ; ,ISOZ      ,IVPAR    ,LDIM     ,NFNLPAR  ,NFTPAR    ,NZONE_PAR 
+entdatnz.f-     ; ,PAR_WGT   ,PARC     ,PARM     ,PARZ     ,STPAR     ,WGT_PAR   
+entdatnz.f-     ; ,NGROUP_ZN ,IPARDET  ,IOINV_GS ,WGT_UNK)    
+entdatnz.f-
+entdatnz.f-*****************************************************************************
+entdatnz.f-*
+--
+entdatnz.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+entdatnz.f-*  IOLG_PAR               Array containing all logarithmic options of           
+entdatnz.f-*                         estimated parameters                                  
+entdatnz.f-*  ISOZ                   Anisotropy of every transmissivity zone               
+entdatnz.f:*  IVPAR                  Vector containing estimation index for all            
+entdatnz.f-*                         parameters                                            
+entdatnz.f-*  LDIM                   Vector containing fisical dimension of j-th element   
+entdatnz.f-*  NFNLPAR                Vector containing non-linear function order           
+entdatnz.f-*                         afecting every parameter at each zone.                
+entdatnz.f-*  NFTPAR                 Vector containing time function number for every      
+--
+entdatnz.f:     ;          ,IOPT_GS(MXGRPZN,20),IVPAR(NZPAR,4),LDIM(NUMEL)
+entdatnz.f-     ;          ,NFTPAR(NZPAR),NFNLPAR(NZPAR)
+entdatnz.f-
+entdatnz.f-       REAL*8 WGT_PAR(NZPAR*IDIMWGT),PARZ(NZPAR),PARM(NPAR),STPAR(NZPAR)
+entdatnz.f-     ;       ,WGT_UNK(NPAR),PAR_WGT(NTYPAR),PARC(NPAR)
+entdatnz.f-
+--
+entdatnz.f:     ;,PAR_WGT(1) ,FILENAME   ,INDPAR     ,INORPAR    ,IVPAR(1,4)
+entdatnz.f:     ;,IOPT_GS    ,IVPAR(1,2) ,IPNT_PAR   ,IVPAR(1,1) ,ISOZ       
+entdatnz.f:     ;,IVPAR(1,3) ,LDIM       ,NFNLPAR    ,NFTPAR     ,STPAR      
+entdatnz.f-     ;,PARC       ,PARM       ,PARZ       ,WGT_PAR    ,WGT_UNK,NROW)
+entdatnz.f-
+entdatnz.f-C------------------------- Reads storage coeficient zones
+entdatnz.f-          
+entdatnz.f-          NZONTOT=IZTRAC
+--
+entdatnz.f:     ;,PAR_WGT(2)    ,FILENAME     ,INDPAR       ,IVPAR(IPOS,4) ,IOPT_GS  
+entdatnz.f:     ;,IVPAR(IPOS,2) ,IPNT_PAR(ISTART)           ,IVPAR(IPOS,1) 
+entdatnz.f:     ;,IVPAR(IPOS,3) ,NFNLPAR(IPOS),NFTPAR(IPOS) ,STPAR(IPOS)   ,PARC          
+entdatnz.f-     ;,PARM          ,PARZ(IPOS)   ,WGT_UNK      ,WGT_PAR(ISTART) ,NROW)
+entdatnz.f-
+entdatnz.f-          END IF ! NZONE_PAR(2).NE.0
+entdatnz.f-
+entdatnz.f-C------------------------- Reads recharge coeficient zones
+--
+entdatnz.f:     ;,PAR_WGT(3)    ,FILENAME      ,INDPAR        ,IVPAR(IPOS,4)
+entdatnz.f:     ;,IOPT_GS       ,IVPAR(IPOS,2) ,IPNT_PAR(ISTART)        
+entdatnz.f:     ;,IVPAR(IPOS,1) ,IVPAR(IPOS,3) ,NFNLPAR(IPOS) ,NFTPAR(IPOS)  
+entdatnz.f-     ;,STPAR(IPOS)   ,PARC          ,PARM          ,PARZ(IPOS)    
+entdatnz.f-     ;,WGT_UNK       ,WGT_PAR(ISTART) ,NROW)
+entdatnz.f-
+entdatnz.f-          END IF ! NZONE_PAR(3).NE.0
+entdatnz.f-
+--
+entdatnz.f:     ;,PAR_WGT(4)    ,FILENAME      ,INDPAR        ,IVPAR(IPOS,4)
+entdatnz.f:     ;,IOPT_GS       ,IVPAR(IPOS,2) ,IPNT_PAR(ISTART)            
+entdatnz.f:     ;,IVPAR(IPOS,1) ,IVPAR(IPOS,3) ,NFNLPAR(IPOS) ,NFTPAR(IPOS)  
+entdatnz.f-     ;,STPAR(IPOS)   ,PARC          ,PARM          ,PARZ(IPOS)    
+entdatnz.f-     ;,WGT_UNK       ,WGT_PAR(ISTART) ,NROW)
+entdatnz.f-
+entdatnz.f-          END IF ! NZONE_PAR(4).NE.0
+entdatnz.f-
+--
+entdatnz.f:     ;,PAR_WGT(5)    ,FILENAME      ,INDPAR        ,IVPAR(IPOS,4)
+entdatnz.f:     ;,IOPT_GS       ,IVPAR(IPOS,2) ,IPNT_PAR(ISTART)      
+entdatnz.f:     ;,IVPAR(IPOS,1) ,IVPAR(IPOS,3) ,NFNLPAR(IPOS) ,NFTPAR(IPOS)  
+entdatnz.f-     ;,STPAR(IPOS)   ,PARC          ,PARM          ,PARZ(IPOS)    
+entdatnz.f-     ;,WGT_UNK       ,WGT_PAR(ISTART) ,NROW)
+entdatnz.f-
+entdatnz.f-          END IF ! NZONE_PAR(5).NE.0
+entdatnz.f-
+--
+entdatnz.f:     ;,PAR_WGT(6)    ,FILENAME      ,INDPAR        ,IVPAR(IPOS,4)
+entdatnz.f:     ;,IOPT_GS       ,IVPAR(IPOS,2) ,IPNT_PAR(ISTART)      
+entdatnz.f:     ;,IVPAR(IPOS,1) ,IVPAR(IPOS,3) ,NFNLPAR(IPOS) ,NFTPAR(IPOS)  
+entdatnz.f-     ;,STPAR(IPOS)   ,PARC          ,PARM          ,PARZ(IPOS)    
+entdatnz.f-     ;,WGT_UNK       ,WGT_PAR(ISTART) ,NROW)
+entdatnz.f-
+entdatnz.f-          END IF ! NZONE_PAR(6).NE.0
+entdatnz.f-
+--
+entdatnz.f:     ;,PAR_WGT(7)    ,FILENAME      ,INDPAR        ,IVPAR(IPOS,4)
+entdatnz.f:     ;,IOPT_GS       ,IVPAR(IPOS,2) ,IPNT_PAR(ISTART)            
+entdatnz.f:     ;,IVPAR(IPOS,1) ,IVPAR(IPOS,3) ,NFNLPAR(IPOS) ,NFTPAR(IPOS)  
+entdatnz.f-     ;,STPAR(IPOS)   ,PARC          ,PARM          ,PARZ(IPOS)    
+entdatnz.f-     ;,WGT_UNK       ,WGT_PAR(ISTART) ,NROW)
+entdatnz.f-
+entdatnz.f-          END IF ! NZONE_PAR(7).NE.0
+entdatnz.f-
+--
+entdatnz.f:     ;,PAR_WGT(8)    ,FILENAME      ,INDPAR       ,IVPAR(IPOS,4)
+entdatnz.f:     ;,IOPT_GS       ,IVPAR(IPOS,2) ,IPNT_PAR(ISTART)            
+entdatnz.f:     ;,IVPAR(IPOS,1) ,IVPAR(IPOS,3) ,NFNLPAR(IPOS) ,NFTPAR(IPOS)  
+entdatnz.f-     ;,STPAR(IPOS)   ,PARC          ,PARM          ,PARZ(IPOS)    
+entdatnz.f-     ;,WGT_UNK       ,WGT_PAR(ISTART) ,NROW)
+entdatnz.f-
+entdatnz.f-          END IF ! NZONE_PAR(7).NE.0
+entdatnz.f-
+--
+entdatnz.f:     ;,PAR_WGT(9)    ,FILENAME      ,INDPAR        ,IVPAR(IPOS,4)
+entdatnz.f:     ;,IOPT_GS       ,IVPAR(IPOS,2) ,IPNT_PAR(ISTART)            
+entdatnz.f:     ;,IVPAR(IPOS,1) ,IVPAR(IPOS,3) ,NFNLPAR(IPOS) ,NFTPAR(IPOS) 
+entdatnz.f-     ;,STPAR(IPOS)   ,PARC          ,PARM          ,PARZ(IPOS)    
+entdatnz.f-     ;,WGT_UNK       ,WGT_PAR(ISTART) ,NROW)
+entdatnz.f-
+entdatnz.f-          END IF ! NZONE_PAR(9).NE.0
+entdatnz.f-
+--
+entdatnz.f:     ;,PAR_WGT(10)   ,FILENAME      ,INDPAR        ,IVPAR(IPOS,4)
+entdatnz.f:     ;,IOPT_GS       ,IVPAR(IPOS,2) ,IPNT_PAR(ISTART)            
+entdatnz.f:     ;,IVPAR(IPOS,1) ,IVPAR(IPOS,3) ,NFNLPAR(IPOS) ,NFTPAR(IPOS)  
+entdatnz.f-     ;,STPAR(IPOS)   ,PARC          ,PARM          ,PARZ(IPOS)    
+entdatnz.f-     ;,WGT_UNK       ,WGT_PAR(ISTART) ,NROW)
+entdatnz.f-
+entdatnz.f-          ELSE
+entdatnz.f-
+--
+entdatnz.f:     ;,PAR_WGT(11)   ,FILENAME      ,INDPAR        ,IVPAR(IPOS,4)
+entdatnz.f:     ;,IOPT_GS       ,IVPAR(IPOS,2) ,IPNT_PAR(ISTART)            
+entdatnz.f:     ;,IVPAR(IPOS,1) ,IVPAR(IPOS,3) ,NFNLPAR(IPOS) ,NFTPAR(IPOS)  
+entdatnz.f-     ;,STPAR(IPOS)   ,PARC          ,PARM          ,PARZ(IPOS)    
+entdatnz.f-     ;,WGT_UNK       ,WGT_PAR(ISTART) ,NROW)
+entdatnz.f- 
+entdatnz.f-          END IF ! NZONE_PAR(11) 
+entdatnz.f-
+--
+entdatnz.f:     ;,PAR_WGT(12)   ,FILENAME      ,INDPAR      ,IVPAR(IPOS,4)
+entdatnz.f:     ;,IOPT_GS       ,IVPAR(IPOS,2) ,IPNT_PAR(ISTART)             
+entdatnz.f:     ;,IVPAR(IPOS,1) ,IVPAR(IPOS,3) ,NFNLPAR(IPOS)        ,NFTPAR(IPOS)
+entdatnz.f-     ;,STPAR(IPOS)   ,PARC          ,PARM        ,PARZ(IPOS)    
+entdatnz.f-     ;,WGT_UNK       ,WGT_PAR(ISTART) ,NROW)
+entdatnz.f-
+entdatnz.f-          END IF ! NZONE_PAR(12)
+entdatnz.f-
+--
+entdatnz.f:     ;,PAR_WGT(13)   ,FILENAME      ,INDPAR        ,IVPAR(IPOS,4)
+entdatnz.f:     ;,IOPT_GS       ,IVPAR(IPOS,2) ,IPNT_PAR(ISTART)            
+entdatnz.f:     ;,IVPAR(IPOS,1) ,IVPAR(IPOS,3) ,NFNLPAR(IPOS) ,NFTPAR(IPOS)  
+entdatnz.f-     ;,STPAR(IPOS)   ,PARC          ,PARM          ,PARZ(IPOS)    
+entdatnz.f-     ;,WGT_UNK       ,WGT_PAR(ISTART) ,NROW)
+entdatnz.f-
+entdatnz.f-          END IF ! NZONE_PAR(13).NE.0
+entdatnz.f-
+--
+entdatnz.f:     ;,PAR_WGT(18)   ,FILENAME      ,INDPAR      ,IVPAR(IPOS,4)
+entdatnz.f:     ;,IOPT_GS       ,IVPAR(IPOS,2) ,IPNT_PAR(ISTART)             
+entdatnz.f:     ;,IVPAR(IPOS,1) ,IVPAR(IPOS,3) ,NFNLPAR(IPOS)        ,NFTPAR(IPOS)
+entdatnz.f-     ;,STPAR(IPOS)   ,PARC          ,PARM        ,PARZ(IPOS)    
+entdatnz.f-     ;,WGT_UNK       ,WGT_PAR(ISTART) ,NROW)
+entdatnz.f-
+entdatnz.f-          END IF ! NZONE_PAR(18).NE.0
+entdatnz.f-
+--
+entdatnz.f:     ;,PAR_WGT(19)   ,FILENAME      ,INDPAR      ,IVPAR(IPOS,4)
+entdatnz.f:     ;,IOPT_GS       ,IVPAR(IPOS,2) ,IPNT_PAR(ISTART)             
+entdatnz.f:     ;,IVPAR(IPOS,1) ,IVPAR(IPOS,3) ,NFNLPAR(IPOS)        ,NFTPAR(IPOS)
+entdatnz.f-     ;,STPAR(IPOS)   ,PARC          ,PARM        ,PARZ(IPOS)    
+entdatnz.f-     ;,WGT_UNK       ,WGT_PAR(ISTART) ,NROW)
+entdatnz.f-
+entdatnz.f-          END IF ! NZONE_PAR(19).NE.0
+entdatnz.f-
+--
+entdatnz.f:     ;,PAR_WGT(14)   ,FILENAME      ,INDPAR        ,IVPAR(IPOS,4)
+entdatnz.f:     ;,IOPT_GS       ,IVPAR(IPOS,2) ,IPNT_PAR(ISTART)            
+entdatnz.f:     ;,IVPAR(IPOS,1) ,IVPAR(IPOS,3) ,NFNLPAR(IPOS) ,NFTPAR(IPOS)  
+entdatnz.f-     ;,STPAR(IPOS)   ,PARC          ,PARM          ,PARZ(IPOS)    
+entdatnz.f-     ;,WGT_UNK       ,WGT_PAR(ISTART) ,NROW)
+entdatnz.f-
+entdatnz.f-          END IF ! NZONE_PAR(14).NE.0
+entdatnz.f-
+--
+likelihood.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR  
+likelihood.f:*  IVPAR                  Vector containing estimation index for all            
+likelihood.f-*                         parameters 
+likelihood.f-*  OBSCLASS               Array containing number of devices where a particular
+likelihood.f-*                         type of state var. was measured
+likelihood.f-*                         COLUMN 1 contains number of devices, while COLUMNS 2-?
+likelihood.f-*                         contain identifiers to those devices
+--
+der_vdtra.f:     &          ,ISOZ     ,IVPAR    ,KXX      ,LDIM     ,LMXNDL
+der_vdtra.f-     &          ,LNNDEL   ,LTYPE    ,LXPAREL  ,MAINF    ,MAXPG
+der_vdtra.f-     &          ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG  ,NFNLTIP
+der_vdtra.f-     &          ,NFTPAR   ,NINT     ,NPAR     ,NPAREL   ,NTYPAR
+der_vdtra.f-     &          ,NUMEL    ,NUMNP    ,NZONE_PAR,NZPAR    ,NZTRA
+der_vdtra.f-     &          ,PARACD   ,PARC     ,POINTWEIGHT        ,RHS_IP
+--
+der_vdtra.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+der_vdtra.f-*  ISOZ                   Anisotropy of every transmissivity zone               
+der_vdtra.f:*  IVPAR                  Vector containing estimation index for all            
+der_vdtra.f-*                         parameters                                            
+der_vdtra.f-*  KXX                    Node numbers of every element (counterclockwise       
+der_vdtra.f-*                         order).                                               
+der_vdtra.f-*  LDIM                   Vector containing the dimension of each element       
+der_vdtra.f-*  LNNDEL                 Number of nodes at every element                      
+--
+der_vdtra.f:     &          ,INORPAR(NTYPAR),IVPAR(NZPAR)   ,KXX(LMXNDL, NUMEL)
+der_vdtra.f-     &          ,LDIM(NUMEL)    ,LNNDEL(NUMEL)  ,LTYPE(NUMEL)
+der_vdtra.f-     &          ,LXPAREL(NUMEL,NPAREL)          ,NFNLPAR(NZPAR)
+der_vdtra.f-     &          ,NFNLPRG(8,NFNL),NFNLTIP(NFNL)  ,NFTPAR(NZPAR)
+der_vdtra.f-     &          ,NZONE_PAR(NTYPAR)
+der_vdtra.f-
+--
+der_vdtra.f:              IP = IVPAR(INORPAR(ITRA)+NZT)
+der_vdtra.f-
+der_vdtra.f-              IF (IP.GT.0 .OR. IOFLLI.NE.0) THEN
+der_vdtra.f-
+der_vdtra.f-                  JJ = INORPAR(ITRA)+NZT
+der_vdtra.f-
+--
+der_vdtra.f:     &    ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG  
+der_vdtra.f-     &    ,PARACD   ,PARC(INORPAR(19)+1),HCALIT   ,HCALAN   ,XPARAM
+der_vdtra.f-     ;    ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+der_vdtra.f-
+der_vdtra.f-C------------------------- Computes partial derivatives of velocities w.r.t.
+der_vdtra.f-C------------------------- transmissivity (only direct dependence)
+--
+wri_part.f:     ;,IDIVPAR  ,IDIDMBLCVP
+wri_part.f-     ;,IDLXPAREL   ,IDIXPARNP
+wri_part.f-     ;
+wri_part.f-     ;!--------------------------------------------------- Discretization arrays
+wri_part.f-     ;,IDKXX     ,IDLTYPE   ,IDLNNDEL    ,IDLDIM
+wri_part.f-     ;,IDIBTCO   ,IDINDPAR
+--
+wri_part.f:     ;,IDIVPAR  ,IDIDMBLCVP,IDLXPAREL   ,IDIXPARNP
+wri_part.f-     ;,IDKXX     ,IDLTYPE   ,IDLNNDEL    ,IDLDIM
+wri_part.f-     ;,IDIBTCO   ,IDINDPAR
+wri_part.f-     ;,IDIAD_S   ,IDIADD_S  ,IDIADN_S    ,IDIAD_D
+wri_part.f-     ;,IDIADD_D  ,IDIADN_D  ,IDIAFD_S    ,IDIAFDD_S
+wri_part.f-     ;,IDIAFDN_S ,IDIAFD_D  ,IDIAFDD_D   ,IDIAFDN_D
+--
+wri_part.f:     ;,'  IVPAR         ',IDIVPAR       ,'  IDMBLCVP      ',IDIDMBLCVP
+wri_part.f-     ;,'  LXPAREL       ',IDLXPAREL     ,'  IXPARNP       ',IDIXPARNP
+wri_part.f-     ;,'  KXX           ',IDKXX         ,'  LTYPE         ',IDLTYPE
+wri_part.f-     ;,'  LNNDEL        ',IDLNNDEL      ,'  LDIM          ',IDLDIM
+wri_part.f-     ;,'  IAD_S         ',IDIAD_S       ,'  IADD_S        ',IDIADD_S
+wri_part.f-     ;,'  IADN_S        ',IDIADN_S      ,'  IAFD_S        ',IDIAFD_S      
+--
+read_lin_comb.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR 
+read_lin_comb.f-*  IOPT_GS                General options for inverse problem. Each row contains 
+read_lin_comb.f-*                         information of a given group of zones
+read_lin_comb.f-*  IPNT_PAR               Array containing pointers to DLT_PAR
+read_lin_comb.f-*  IVEND                  Array of pointers to IPNT_PAR (last position)
+read_lin_comb.f-*  IVEST                  Array of pointers to IPNT_PAR (initial position)
+--
+random_pipo.f:*  IGR_ZONE               Array containing the relation zone->group (IVPAR(4))
+random_pipo.f-*  INORPAR                Array containing the indexes with the location        
+random_pipo.f-*                         of the different paramaters in arrays PARZ, PARM,     
+random_pipo.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+random_pipo.f-*  KXX                    Node numbers of every element (counterclockwise       
+random_pipo.f-*                         order).                                               
+random_pipo.f-*  LTYPE                  Vector containing the type of each element            
+random_pipo.f-*  LXPAREL                Array containing zone numbers for a given             
+random_pipo.f-*                         element parameter                                     
+--
+so_obj.f:*  IVPAR                  Vector containing estimation index for all            
+so_obj.f-*                         parameters                                            
+so_obj.f-*  IZPAR                  Similar to ITYPEPAR, but containing component at PARC
+so_obj.f:*                         PARM or IVPAR
+so_obj.f-*  NZONE_PAR              Array containing the number of zones of all           
+so_obj.f-*                         parameters                                            
+so_obj.f-*  OBSCLASS               Array containing number of devices where a particular
+so_obj.f-*                         type of state var. was measured
+so_obj.f-*                         COLUMN 1 contains number of devices, while COLUMNS 2-?
+--
+init_extrap.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+init_extrap.f-*  IXPARNP                Array containing zone number of each node j,          
+init_extrap.f-*                         corresponding to INpar index parameter zone.          
+init_extrap.f-*  NFTPAR                 Vector containing time function number at every       
+init_extrap.f-*                         parameter zone                                        
+init_extrap.f-*  PARC                   Vector containing calculated values for all           
+--
+derq_arr.f:     &          ,IOFMLF   ,IVPAR    ,KXX      ,LMXNDL   ,LNNDEL
+derq_arr.f-     &          ,LXARR    ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG
+derq_arr.f-     &          ,NFNLTIP  ,NFTPAR   ,NINT     ,NPAR     ,NPAREL
+derq_arr.f-     &          ,NPPEL    ,NPPNP    ,NPZON    ,NTYPAR   ,NUMEL
+derq_arr.f-     &          ,NUMNP    ,NZONE_PAR,NZPAR    ,PARACD   ,PARC
+derq_arr.f-     &          ,PAREL    ,PARNP    ,IDIMWGT  ,WGT_PAR  ,IPNT_PAR
+--
+derq_arr.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+derq_arr.f:*  IVPAR                  Vector containing estimation index for all            
+derq_arr.f-*                         parameters                                            
+derq_arr.f-*  KXX                    Node numbers of every element (counterclockwise       
+derq_arr.f-*                         order).                                               
+derq_arr.f-*  LNNDEL                 Number of nodes at every element                      
+derq_arr.f-*  LXARR                  Areal recharge (steady) zone number at a given element
+--
+derq_arr.f:     &          ,INORPAR(NTYPAR)     ,IVPAR(NZPAR)    ,KXX(LMXNDL,NUMEL)
+derq_arr.f-     &          ,LNNDEL(NUMEL)       ,LXARR(NUMEL)    ,NFNLPAR(NZPAR)
+derq_arr.f-     &          ,NFNLPRG(8,NFNL)     ,NFNLTIP(NFNL)   ,NFTPAR(NZPAR)
+derq_arr.f-     &          ,NZONE_PAR(NTYPAR) 
+derq_arr.f-
+derq_arr.f-
+--
+derq_arr.f:          IP = IVPAR(JJ)
+derq_arr.f-          RECHARGE = PAREL(L,8)
+derq_arr.f-          AREALN = AREA(L)/NNUD
+derq_arr.f-
+derq_arr.f-
+derq_arr.f-          IF (NZARR.NE.0 .AND. (IP.NE.0 .OR. IOFLLI.NE.0)) THEN
+--
+derq_arr.f:     &    ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG
+derq_arr.f-     &    ,PARACD   ,PARC(INORPAR(19)+1),HCALIT   ,HCALAN   ,XPARAM
+derq_arr.f-     ;    ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+derq_arr.f-
+derq_arr.f-
+derq_arr.f-              IF (NPTOT.GT.0) THEN
+--
+dercoe_arr_flu.f:     &          ,IOCAP    ,IOFMLT   ,IOTRLI   ,IVPAR    ,KXX
+dercoe_arr_flu.f-     &          ,LMXNDL   ,LNNDEL   ,LXPAREL  ,NFLAGS   ,NFNL
+dercoe_arr_flu.f-     &          ,NFNLPAR  ,NFNLPRG  ,NFNLTIP  ,NFTPAR   ,NINT
+dercoe_arr_flu.f-     &          ,NPAR     ,NPAREL   ,NPPEL    ,NPZON    ,NTYPAR
+dercoe_arr_flu.f-     &          ,NUMEL    ,NUMNP    ,NZONE_PAR,NZPAR    ,PARACD
+dercoe_arr_flu.f-     &          ,PARC     ,PAREL    ,IDIMWGT  ,WGT_PAR  ,IPNT_PAR
+--
+dercoe_arr_flu.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+dercoe_arr_flu.f:*  IVPAR                  Vector containing estimation index for all            
+dercoe_arr_flu.f-*                         parameters                                            
+dercoe_arr_flu.f-*  IXPARNP                Array containing zone number of each node j,          
+dercoe_arr_flu.f-*                         corresponding to INpar index parameter zone.          
+dercoe_arr_flu.f-*  KXX                    Node numbers of every element (counterclockwise       
+dercoe_arr_flu.f-*                         order).                                               
+--
+dercoe_arr_flu.f:     &          ,IVPAR(NZPAR)         ,KXX(LMXNDL,NUMEL),LNNDEL(NUMEL)
+dercoe_arr_flu.f-     &          ,LXPAREL(NUMEL,NPAREL),NFNLPAR(NZPAR)   ,NFNLPRG(8,NFNL)
+dercoe_arr_flu.f-     &          ,NFNLTIP(NFNL)        ,NFTPAR(NZPAR)  ,NZONE_PAR(NTYPAR)
+dercoe_arr_flu.f-
+dercoe_arr_flu.f-      REAL*8::AREA(NUMEL)          ,CCALAN(NUMNP)    ,CCALIT(NUMNP)
+dercoe_arr_flu.f-     &       ,CFPAREL(NUMEL,NPAREL),DERH(NUMNP,NPAR,IDIMDERH)
+--
+dercoe_arr_flu.f:              IP = IVPAR(JJ)
+dercoe_arr_flu.f-
+dercoe_arr_flu.f-              IF (IP.NE.0 .OR. IOTRLI.NE.0) THEN
+dercoe_arr_flu.f-
+dercoe_arr_flu.f-                  IF (IOTRLI.NE.0) THEN
+dercoe_arr_flu.f-                      NCNF = NFNLPAR(JJ)
+--
+dercoe_arr_flu.f:     &    ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG
+dercoe_arr_flu.f-     &    ,PARACD   ,PARC(INORPAR(18)+1),CCALIT   ,CCALAN   ,XPARAM
+dercoe_arr_flu.f-     ;    ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+dercoe_arr_flu.f-
+dercoe_arr_flu.f-                  IF (NPTOT.NE.0) THEN
+dercoe_arr_flu.f-
+--
+read_par.f:*  IOPTLOG                Part of IVPAR (column 4), containing log-estimation 
+read_par.f-*                         option for all zones related to this parameter type
+read_par.f-*  IOPT_GS                Vector contaning geost. options of all groups of zones
+read_par.f:*  IPNT_END               Part of column 2 of array IVPAR, related to actual 
+read_par.f-*                         parameter type. Contains the last useful position 
+read_par.f-*                         at array IPNT_PAR to be used on the parameterization
+read_par.f-*                         of actual zonal parameter
+read_par.f-*  IPNT_PAR               Array contaning pointers to arrays DLT_PAR and WGT_PAR
+read_par.f-*                         for defining linear combinations of unknowns
+read_par.f:*  IPNT_START             Part of column 1 of array IVPAR, related to actual 
+read_par.f-*                         parameter type. Contains the first useful position 
+read_par.f-*                         at array IPNT_PAR to be used on the parameterization
+read_par.f-*                         of actual zonal parameter
+read_par.f:*  ITYPEVAR               Part of column 2 of array IVPAR, related to actual 
+read_par.f-*                         parametyer type. Contains index of parameter type
+read_par.f:*  IVVARGRP               Part of column 4 of array IVPAR, related to actual 
+read_par.f-*                         parameter type. Contains the group of zones to which
+read_par.f-*                         actual zone belongs to
+read_par.f-*  NFNLVAR                Array contaning non linear functions indexes of actual 
+read_par.f-*                         parameter type
+read_par.f-*  NFTVAR                 Array containing time functions indexes of actual 
+--
+update_parz.f:     ;,IVPAR      ,PARZ    ,WGT_PAR)
+update_parz.f-
+update_parz.f-********************************************************************************
+update_parz.f-*
+update_parz.f-* PURPOSE Updates vector of zonal parameters from iteration K to iteration K+1
+update_parz.f-*
+--
+update_parz.f:*  IVPAR                  Array containing estimation indexes
+update_parz.f-*                           - Column 1: First useful position at IPNT_PAR
+update_parz.f-*                           - Column 2: Last useful position at IPNT_PAR
+update_parz.f-*                           - Column 3: Group of zones
+update_parz.f-*                           - Column 4: Type of parameter
+update_parz.f-*  PARZ                   Array containing zonal parameters
+--
+update_parz.f:     ;         ,IVPAR(NZPAR,4),IPNT_PAR(IDIMWGT*NZPAR)
+update_parz.f-                                                                 ! Real external
+update_parz.f-      REAL*8 WGT_PAR(IDIMWGT*NZPAR),DLT_PAR(NPAR),PARZ(NZPAR)
+update_parz.f-                                                              ! Integer internal
+update_parz.f-      INTEGER*4 IZPAR,IPOS
+update_parz.f-                                                                 ! Real internal
+--
+update_parz.f:         IF (IVPAR(IZPAR,1).NE.0) THEN
+update_parz.f-
+update_parz.f-            UPDATE=0.0D0       ! Initializes updating value
+update_parz.f-
+update_parz.f-C_______________________ Step 1.1.A: Loop over parameterization components
+update_parz.f-
+update_parz.f:            DO IPOS=IVPAR(IZPAR,1),IVPAR(IZPAR,2)
+update_parz.f-               UPDATE=UPDATE+WGT_PAR(IPOS)*DLT_PAR(IPNT_PAR(IPOS))
+update_parz.f-            END DO
+update_parz.f-
+update_parz.f-C_______________________ Step 1.1.B: Adds updated value, depending on the log. 
+update_parz.f-C_______________________             estimation index
+--
+update_parz.f:            IF (IVPAR(IZPAR,4).EQ.0) THEN   ! Aritm. estimation
+update_parz.f-               PARZ(IZPAR)=PARZ(IZPAR)+UPDATE
+update_parz.f-            ELSE                            ! Log. estimation
+update_parz.f-               PARZ(IZPAR)=10.0D0**( DLOG10( PARZ(IZPAR) ) + UPDATE )
+update_parz.f-            END IF
+update_parz.f-
+update_parz.f:         END IF ! IVPAR(IZPAR,1).NE.0
+update_parz.f-
+update_parz.f-      END DO ! IZPAR=1,NZPAR
+update_parz.f-
+update_parz.f-      RETURN
+update_parz.f-      END
+--
+estimcov.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+estimcov.f-*  PARC                   Vector containing calculated values for all           
+estimcov.f-*                         parameters      
+estimcov.f-*  STPAR                  Vector containing standard deviation errors of        
+estimcov.f-*                         all parameters prioo information   
+estimcov.f-*  TYPENAME               Array containing  the names of the state var. and 
+--
+derstg.f:     &          ,IOFLLI   ,IOFMLF   ,IOVRWC   ,IVPAR    ,KXX
+derstg.f-     &          ,LMXNDL   ,LNNDEL   ,LTYPE    ,LXPAREL  ,NFLAGS
+derstg.f-     &          ,NFNL     ,NFNLPAR  ,NFNLPRG  ,NFNLTIP  ,NFTPAR
+derstg.f-     &          ,NINT     ,NPAREL   ,NPARF    ,NTYPAR   ,NUMEL
+derstg.f-     &          ,NUMNP    ,NZONE_PAR,NZPAR    ,PARACD   ,PARC
+derstg.f-     &          ,THETAT   ,IDIMWGT  ,WGT_PAR  ,IPNT_PAR ,NPAR
+--
+derstg.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+derstg.f:*  IVPAR                  Vector containing estimation index for all            
+derstg.f-*                         parameters                                            
+derstg.f-*  KXX                    Node numbers of every element (counterclockwise       
+derstg.f-*                         order).                                               
+derstg.f-*  LNNDEL                 Number of nodes at every element                      
+derstg.f-*  LTYPE                  Vector containing the type of each element            
+--
+derstg.f:     &          ,IVPAR(NZPAR)         ,KXX(LMXNDL,NUMEL) ,LNNDEL(NUMEL)
+derstg.f-     &          ,LXPAREL(NUMEL,NPAREL),LTYPE(NUMEL)      ,NFNLPAR(NZPAR)
+derstg.f-     &          ,NFNLTIP(NFNL)        ,NFNLPRG(8,NFNL)   ,NFTPAR(NZPAR)
+derstg.f-     &          ,NZONE_PAR(NTYPAR)
+derstg.f-
+derstg.f-C------------------------- Internal
+--
+derstg.f:          IP = IVPAR(INORPAR(7)+IZON)
+derstg.f-	  AREALN = AREA(L)/NNUD
+derstg.f-
+derstg.f-C------------------------- Computes integration factors to save operations
+derstg.f-
+derstg.f-          IF (IODENS.EQ.1) THEN
+--
+derstg.f:     & ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG  
+derstg.f-     & ,PARACD   ,PARC(INORPAR(19)+1),HCALIT   ,HCALAN   ,XPARAM
+derstg.f-     ; ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+derstg.f-
+derstg.f-C------------------------- Updates the inverse problem RHS.                 
+derstg.f-C------------------------- Only Lumped scheme
+--
+getparname.f:     ;(NSTAT,NTYPAR,PARNUMBER,IVPAR,INORPAR2,NZPAR,TYPENAME)
+getparname.f-****************************************************************
+getparname.f-* PURPOSE
+getparname.f-* this function returns the name of the parameter that has the value 
+getparname.f:* "parnumber" in ivpar.
+getparname.f-
+getparname.f-
+getparname.f-      IMPLICIT NONE
+getparname.f-      
+getparname.f-      INTEGER*4 TYPES, I, NSTAT,NTYPAR
+getparname.f:      INTEGER*4 PARNUMBER,NZPAR,IVPAR(NZPAR),INORPAR2(NTYPAR+1)
+getparname.f-      CHARACTER*10 TYPENAME(NSTAT+NTYPAR)
+getparname.f-
+getparname.f-      DO I=1,NZPAR
+getparname.f:         IF (IVPAR(I) .EQ. PARNUMBER) THEN
+getparname.f-            TYPES=0
+getparname.f-            DO WHILE(INORPAR2(TYPES+1) .LT. I)
+getparname.f-               TYPES=TYPES+1
+getparname.f-            ENDDO
+getparname.f-            GETPARNAME = TYPENAME(TYPES+NSTAT)
+--
+getparname.f:     ;(PARNUMBER,IVPAR,INORPAR2,NZPAR,NTYPAR)
+getparname.f-****************************************************************
+getparname.f-* PURPOSE
+getparname.f-* this function returns the zone of the parameter that has the value 
+getparname.f:* "parnumber" in ivpar.
+getparname.f-
+getparname.f-      IMPLICIT NONE
+getparname.f-      
+getparname.f:      INTEGER*4 PARNUMBER,NZPAR,NTYPAR,IVPAR(NZPAR),INORPAR2(NTYPAR+1) 
+getparname.f-      INTEGER*4 TYPES, I
+getparname.f-      
+getparname.f-      DO I=1,NZPAR
+getparname.f:         IF (IVPAR(I) .EQ. PARNUMBER) THEN
+getparname.f-            TYPES=0
+getparname.f-            DO WHILE(INORPAR2(TYPES+1) .LT. I)
+getparname.f-               TYPES=TYPES+1
+getparname.f-            ENDDO
+getparname.f-            GETPARZNNR = I - INORPAR2(TYPES)
+--
+derq_tra.f:     &          ,IOFMLF   ,ISOZ     ,IVPAR    ,KXX      ,LDIM
+derq_tra.f-     &          ,LMXNDL   ,LNNDEL   ,LTYPE    ,LXPAREL  ,MAXPG
+derq_tra.f-     &          ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG  ,NFNLTIP
+derq_tra.f-     &          ,NFTPAR   ,NINT     ,NPAR     ,NPAREL   ,NPPNP
+derq_tra.f-     &          ,NTYPAR   ,NTYPEL   ,NUMEL    ,NUMNP    ,NZONE_PAR
+derq_tra.f-     &          ,NZPAR    ,NZTRA    ,PARACD   ,PARC     ,PARNP
+--
+derq_tra.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+derq_tra.f-*  ISOZ                   Anisotropy of every transmissivity zone               
+derq_tra.f:*  IVPAR                  Vector containing estimation index for all            
+derq_tra.f-*                         parameters                                            
+derq_tra.f-*  KXX                    Node numbers of every element (counterclockwise       
+derq_tra.f-*                         order).                                               
+derq_tra.f-*  LNNDEL                 Number of nodes at every element                      
+derq_tra.f-*  LTYPE                  Vector containing the type of each element            
+--
+derq_tra.f:     &          ,ISOZ(NZTRA)          ,IVPAR(NZPAR)   ,KXX(LMXNDL,NUMEL)
+derq_tra.f-     &          ,LDIM(NUMEL)          ,LNNDEL(NUMEL)  ,LTYPE(NUMEL)
+derq_tra.f-     &          ,LXPAREL(NUMEL,NPAREL),NFNLPAR(NZPAR) ,NFNLPRG(8,NFNL)
+derq_tra.f-     &          ,NFNLTIP(NFNL)        ,NFTPAR(NZPAR)  ,NZONE_PAR(NTYPAR)
+derq_tra.f-     ;          ,IDIMWGT  ,IPNT_PAR
+derq_tra.f-
+--
+derq_tra.f:                      IP = IVPAR(NZT+INORPAR(ITRA))
+derq_tra.f-
+derq_tra.f-                      IF (IP.GT.0 .OR. IOFLLI.NE.0) THEN
+derq_tra.f-
+derq_tra.f-                          JJ = INORPAR(ITRA)+NZT
+derq_tra.f-
+--
+derq_tra.f:     &    ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG  
+derq_tra.f-     &    ,PARACD   ,PARC(INORPAR(19)+1),HCALIT   ,HCALAN   ,XPARAM
+derq_tra.f-     ;    ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+derq_tra.f-                      
+derq_tra.f-                          DO IPAR=1,NPTOT
+derq_tra.f-
+--
+difmat_mtdz.f:     .(NUM_ZON,  IUNIN,  IVPAR,   PARC,INORPAR,NZONE_PAR,NTYPAR,
+difmat_mtdz.f-     .   NZPAR,  IXDMT,  NUMNP,   NPAR,IV_MTDZ,MXIV_MZ,RV_MTDZ,MXRV_MZ, 
+difmat_mtdz.f-     .   IOINV,   IERR,  MAINF ,NPBMX   ,NPARNP)
+difmat_mtdz.f-
+difmat_mtdz.f-************************************************************************
+difmat_mtdz.f-*
+--
+difmat_mtdz.f:*      IVPAR (NZPAR)       Global number of all parameters
+difmat_mtdz.f-*      PARC (NZPAR)        Current value of all parameters
+difmat_mtdz.f-*      INORPAR (NTYPAR)    Pointers to each type of parameters
+difmat_mtdz.f-*      NZONE_PAR(NTYPAR)    Number of zones of each type of parameters
+difmat_mtdz.f-*      NTYPAR              Number of types of parameters
+difmat_mtdz.f-*      NZPAR               Total number of parameters
+--
+difmat_mtdz.f:     .        NZPAR, IVPAR, NPBMX, IXDMT   ,NPARNP
+difmat_mtdz.f-
+difmat_mtdz.f-      REAL*8 RV_MTDZ,PARC
+difmat_mtdz.f-
+difmat_mtdz.f-      DIMENSION IV_MTDZ(MXIV_MZ) , RV_MTDZ(MXRV_MZ) 
+difmat_mtdz.f-
+--
+difmat_mtdz.f:     .(  NDPAR,  MAINF,  IVPAR,  PARC,INORPAR,NZONE_PAR, NTYPAR, NZPAR,
+difmat_mtdz.f-     .   IOINV,  IERR)
+difmat_mtdz.f-
+difmat_mtdz.f-      END DO
+difmat_mtdz.f-
+difmat_mtdz.f-* ................................................................. Set pointers
+--
+correct_parz.f:     ;,IOPT_GS  ,ISOZ      ,IVPAR     ,LDIM_GS ,PARZ)
+correct_parz.f-
+correct_parz.f-********************************************************************************
+correct_parz.f-*
+correct_parz.f-* PURPOSE
+correct_parz.f-*
+--
+correct_parz.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+correct_parz.f-*  IOPT_GS                General options for inverse problem. 
+correct_parz.f-*  ISOZ                   Anisotropy of every transmissivity zone               
+correct_parz.f:*  IVPAR                  Array containing estimation indexes
+correct_parz.f-*  LDIM_GS                Array containing dimension of transmisivity zones
+correct_parz.f-*  PARZ                   Vector containing calculated values for all parameters                                            
+correct_parz.f-*
+correct_parz.f-* INTERNAL VARIABLES: ARRAYS
+correct_parz.f-*
+--
+correct_parz.f:     ;         ,IOPT_GS(MXGRPZN,20),IVPAR(NZPAR,4),ISOZ(NZTRA)
+correct_parz.f-     ;         ,LDIM_GS(NZTRA),INORPAR(NTYPAR)
+correct_parz.f-                                                                 ! Real external
+correct_parz.f-      REAL*8 PARZ(NZPAR)
+correct_parz.f-                                                              ! Integer internal
+correct_parz.f-      INTEGER*4 IZPAR,IGROUP,ITYPE,IDIM
+--
+correct_parz.f:        IF (IVPAR(IZPAR,1).NE.0) THEN
+correct_parz.f-
+correct_parz.f:           IGROUP=IVPAR(IZPAR,3)
+correct_parz.f-           ITYPE=IOPT_GS(IGROUP,1)    ! Type of parameter
+correct_parz.f:           IF (IOPT_GS(IGROUP,2).EQ.1 .AND. IVPAR(IZPAR,4).NE.0) THEN
+correct_parz.f-
+correct_parz.f-              IF (NUMITER.EQ.1 .OR. IOPT_GS(IGROUP,6).NE.0) THEN
+correct_parz.f-                  PARZ(IZPAR)=10.0D0**PARZ(IZPAR)
+correct_parz.f-                  IF (ITYPE.EQ.1 .AND. ISOZ(IZPAR).EQ.1) THEN
+correct_parz.f-                     DO IDIM=1,LDIM_GS(IZPAR)
+--
+correct_parz.f:           END IF ! IOPT_GS(IGROUP,2).EQ.1 .AND. IVPAR(IZPAR,4).NE.0
+correct_parz.f-
+correct_parz.f:        END IF ! IVPAR(IZPAR,1).NE.0
+correct_parz.f-
+correct_parz.f-      END DO
+correct_parz.f-        
+correct_parz.f-      RETURN
+correct_parz.f-      END
+--
+zone_geometry.f:*                         of array IVPAR on input
+zone_geometry.f-*  INORPAR                Array containing the indexes with the location        
+zone_geometry.f-*                         of the different paramaters in arrays PARC, PARM,     
+zone_geometry.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+zone_geometry.f-*  KXX                    Node numbers of every element (counterclockwise order)
+zone_geometry.f-*  LNNDEL                 Number of nodes at every element                      
+zone_geometry.f-*  LXPAREL                Zone number to which a given element belongs to        
+zone_geometry.f-*  NZONE_PAR              Array containing the number of zones of all           
+zone_geometry.f-*                         parameters                                            
+--
+assign.f:     ;(  NPAR       ,NZPAR     ,IVPAR     ,INDPAR
+assign.f-     ;  ,PAR        ,PARC)
+assign.f-       
+assign.f-*****************************************************************
+assign.f-***   ASSIGN NEW VALUE OF PARAMETERS
+assign.f-*****************************************************************
+--
+assign.f:       DIMENSION PAR(NPAR),IVPAR(NZPAR),PARC(NZPAR),INDPAR(NPAR)
+assign.f-
+assign.f-       K=1
+assign.f-       DO I=1,NZPAR
+assign.f:          IF(IVPAR(I).NE.0) THEN
+assign.f-  
+assign.f-C-------------------------------Anti-log transformation
+assign.f-               IF(INDPAR(K).NE.0) THEN
+assign.f-                  PARC(I)=10**(DLOG10(PARC(I))+PAR(K))
+assign.f-               ELSE
+--
+derdst.f:     &        ,FNT      ,IFLAGS   ,INORPAR  ,IVPAR    ,KXX      ,LDIM
+derdst.f-     &        ,LNNDEL   ,LXPAREL  ,NFNLPAR  ,NFNLPRG  ,NFNLTIP  ,NFTPAR
+derdst.f-     &        ,NZONE_PAR,PARACD   ,PARC     ,QXYZ     ,IDIMWGT  ,WGT_PAR
+derdst.f-     &        ,IPNT_PAR ,IPOS     ,DERIV)
+derdst.f-
+derdst.f-******************************************************************************
+--
+derdst.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+derdst.f:*  IVPAR                  Vector containing estimation index for all            
+derdst.f-*                         parameters                                            
+derdst.f-*  KXX                    Node numbers of every element (counterclockwise       
+derdst.f-*                         order).                                               
+derdst.f-*  LDIM                   Vector containing the dimension of each element       
+derdst.f-*  LNNDEL                 Number of nodes at every element                      
+--
+derdst.f:      INTEGER*4::IFLAGS(NFLAGS)       ,INORPAR(NTYPAR),IVPAR(NZPAR)
+derdst.f-     &          ,KXX(LMXNDL,NUMEL)    ,LDIM(NUMEL)    ,LNNDEL(NUMEL)
+derdst.f-     &          ,LXPAREL(NUMEL,NPAREL),NFNLPAR(NZPAR) ,NFNLPRG(8,NFNL)
+derdst.f-     &          ,NFNLTIP(NFNL)        ,NFTPAR(NZPAR)  ,NZONE_PAR(NTYPAR)
+derdst.f-
+derdst.f-      REAL*8::BIBI(IDIMBB,NUMEL)        ,CAUX1(NUMNP)
+--
+derdst.f:          IP = IVPAR(JJ)
+derdst.f-
+derdst.f-          IF (IP.NE.0 .OR. IOTRLI.NE.0) THEN
+derdst.f-              NNUD = LNNDEL(L)
+derdst.f-              LD = LDIM(L)
+derdst.f-              IF (IOTRLI.NE.0) THEN
+--
+derdst.f:     &    ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG
+derdst.f-     &    ,PARACD   ,PARC(INORPAR(19)+1),CCALIT   ,CCALAN   ,XPARAM
+derdst.f-     ;    ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+derdst.f-
+derdst.f-              IF (NPTOT.GT.0) THEN
+derdst.f-
+--
+inver.f:     &           ,ITYPFLUDSC,ITYPTRADSC        ,IVPAR    ,IXPARNP
+inver.f-     &           ,KINT     ,KXX      ,LDIM
+inver.f-     &           ,LINMET   ,LMXNDL   ,LNNDEL   ,GRADLOC  ,LTYPE
+inver.f-     &           ,LXPAREL  ,MAINF    ,MAXNB    ,MAXNBF
+inver.f-     &           ,MAXNN    ,MAXPG    ,MEASTYP  ,NBAND
+inver.f-     &           ,NBAND1   ,NBANDCOV ,NDEVS
+--
+inver.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+inver.f-*  IOLG_PAR               Array containing all logarithmic options of           
+inver.f-*                         estimated parameters                                  
+inver.f-*  IOPTS                                                                        
+inver.f-*  IOWRITE                Array containing all output options                   
+inver.f-*  IPAR_DIR               Array containing all integer direct problem           
+--
+inver.f:*  IVPAR                  Vector containing estimation index for all            
+inver.f-*                         parameters                                            
+inver.f-*  IXPARNP                Array containing zone number of each node j,          
+inver.f-*                         corresponding to INpar index parameter zone.          
+inver.f-*  LXPAREL                Array containing zone numbers for a given             
+inver.f-*                         element parameter                                     
+--
+inver.f:     &          ,IVPAR(NZPAR,4)                    
+inver.f-     &          ,IXPARNP(NUMNP,NPARNP,NPBMX)     ,KXX(LMXNDL,NUMEL)
+inver.f-     &          ,LDIM(NUMEL)
+inver.f-     &          ,LINMET(3,2)                     ,LNNDEL(NUMEL)
+inver.f-     &          ,LTYPE(NUMEL)                    
+inver.f-     &          ,LXPAREL(NUMEL,NPAREL)           ,MEASTYP(NUMTOBS)
+--
+inver.f:     ;,IVPAR          ,IZN_NPP_GS    ,IZN_PP_GS       ,KRIGAUX_GS      
+inver.f-     ;,KRISOL_GS      ,KRISYS_GS     ,KXX             ,LDIM_GS         
+inver.f-     ;,NUMSB_GS       ,NZONE_PAR     ,PAR_WGT         ,PARC            
+inver.f-     ;,PARM           ,PARZ          ,POSDIS_GS       ,POSDISAUX_GS    
+inver.f-     ;,POSMEAS_GS     ,POSZN_GS      ,ROTMAT_GS       ,SEARCH_GS       
+inver.f-     ;,SUPBL_GS       ,TRIM_GS       ,VARIO_GS        ,VMEAS_GS        
+--
+inver.f:                      IF (IVPAR(I,1).NE.0) IOLG_PAR(J,2)=1
+inver.f-                   ENDDO
+inver.f-                   IPOSIC=IPOSIC+MAX (ISOT,IODIM)*NZONE_PAR(1)
+inver.f-                ELSE
+inver.f-                   IF (NZONE_PAR(J).NE.0) THEN
+inver.f-                      DO I=IPOSIC,IPOSIC+NZONE_PAR(J)-1
+inver.f:                         IF (IVPAR(I,1).NE.0) IOLG_PAR(J,2)=1
+inver.f-                      ENDDO
+inver.f-                      IPOSIC=IPOSIC+NZONE_PAR(J)
+inver.f-                   ENDIF
+inver.f-                ENDIF
+inver.f-             ENDDO
+--
+inver.f:     &,IVPAR
+inver.f-     &,IXPARNP   ,KINT      ,KXX         ,LDIM
+inver.f-     &,LINMET    ,LMXNDL    ,LNNDEL      ,GRADLOC  ,LTYPE   
+inver.f-     &,LXPAREL   ,IPAR_INV(4) ,MAXNB    ,MAXNBF
+inver.f-     &,MAXNN     ,MAXPG
+inver.f-     &,MIN_STOP  ,NBAND     ,NBAND1
+--
+inver.f:     ;,IVPAR      ,PARZ    ,WGT_PAR)
+inver.f-
+inver.f-C------------------------- Computes matrix diffusion dimensionless terms
+inver.f-C------------------------- They can change as a consequence of a change
+inver.f-C------------------------- in model parameters (tipically after an inv.
+inver.f-C------------------------- prob. iteration). Dependence on time will be 
+--
+inver.f:     ;,NZPAR       ,INORPAR  ,IVPAR  ,NZONE_PAR    ,PARGOOD)
+inver.f-
+inver.f-C______________________________ Last simulation to compute mass balance
+inver.f-C______________________________ and state variable (possibly last iteration
+inver.f-C______________________________ was bad. Lastgood set of parameters was 
+inver.f-C______________________________ recovered in Marquardt's subroutine)
+--
+inver.f:     &,IVPAR
+inver.f-     &,IXPARNP   ,KINT      ,KXX         ,LDIM
+inver.f-     &,LINMET    ,LMXNDL    ,LNNDEL      ,GRADLOC  ,LTYPE   
+inver.f-     &,LXPAREL   ,IPAR_INV(4) ,MAXNB    ,MAXNBF
+inver.f-     &,MAXNN     ,MAXPG
+inver.f-     &,MIN_STOP  ,NBAND     ,NBAND1
+--
+wri_param_history.f:     ;,INORPAR ,IVPAR  ,NZONE_PAR ,PARGOOD)
+wri_param_history.f-
+wri_param_history.f-********************************************************************************
+wri_param_history.f-*     
+wri_param_history.f-* PURPOSE Writes values of the estimated/interpolated parameters
+wri_param_history.f-*
+--
+wri_param_history.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+wri_param_history.f:*  IVPAR                  Vector containing estimation index for all            
+wri_param_history.f-*                         parameters  
+wri_param_history.f-*  NZONE_PAR              Array containing the number of zones of all           
+wri_param_history.f-*                         parameters                                            
+wri_param_history.f-*  PARAUX                 Here, will be read. External due to workspace
+wri_param_history.f-*
+--
+wri_param_history.f:     ;         ,NZONE_PAR(NTYPAR),IVPAR(NZPAR),INORPAR(NTYPAR)
+wri_param_history.f-                                                                 ! Real external
+wri_param_history.f-      REAL*8 PARGOOD(NZPAR)
+wri_param_history.f-                                                              ! Integer internal
+wri_param_history.f-      INTEGER*4 ITER,ITYPE,NUMITER,ISUMFO
+wri_param_history.f-                                                                    ! Characters
+--
+wri_param_history.f:     ;,VAR_TYPE(1) ,IVPAR(1)  ,PARGOOD(1))
+wri_param_history.f-        
+wri_param_history.f-        DO ITYPE=2,14
+wri_param_history.f-
+wri_param_history.f-           IF (NZONE_PAR(ITYPE).NE.0) CALL WRI_PAR_HIST_AUX
+wri_param_history.f-     ;(0                ,1                  ,MAINF  
+wri_param_history.f:     ;,NZONE_PAR(ITYPE) ,VAR_TYPE(ITYPE)    ,IVPAR(INORPAR(ITYPE+5)+1)
+wri_param_history.f-     ;,PARGOOD(INORPAR(ITYPE+5)+1))
+wri_param_history.f-
+wri_param_history.f-        END DO ! ITYPE=2,14
+wri_param_history.f-
+wri_param_history.f-      END DO ! ITER=1,11111
+--
+wri_param_history.f:     ;(IOP_TRA  ,ISOT  ,MAINF  ,NZVAR  ,VARTYPE  ,IVPAR ,PARGOOD)
+wri_param_history.f-
+wri_param_history.f-********************************************************************************
+wri_param_history.f-*
+wri_param_history.f-* PURPOSE Writes values of the estimated/interpolated parameter of a given type
+wri_param_history.f-*
+--
+wri_param_history.f:*  IVPAR                  Vector containing estimation index for all            
+wri_param_history.f-*                         parameters  
+wri_param_history.f-*  PARGOOD                Array containing estimated ZONAL parameters
+wri_param_history.f-*
+wri_param_history.f-* EXTERNAL VARIABLES: SCALARS
+wri_param_history.f-*
+--
+wri_param_history.f:     ;         ,IVPAR(NZVAR,ISOT)
+wri_param_history.f-                                                                 ! Real external
+wri_param_history.f-      REAL*8 PARGOOD(NZVAR*ISOT)
+wri_param_history.f-                                                              ! Integer internal
+wri_param_history.f-      INTEGER*4 IZVAR,ICOMPO
+wri_param_history.f-                                                                    ! Characters
+--
+wri_param_history.f:          IF (IVPAR(IZVAR,ICOMPO).NE.0) THEN
+wri_param_history.f-
+wri_param_history.f-C_______________________ Step 1.1.1: Defines anisotropy character
+wri_param_history.f-
+wri_param_history.f-             IF (IOP_TRA.NE.0) THEN
+wri_param_history.f-               WRITE(CHARISOZ,'(I1)') ICOMPO
+--
+wri_param_history.f:          END IF ! IVPAR(IZVAR,ICOMPO).NE.0
+wri_param_history.f-        END DO ! IZVAR=1,NZVAR
+wri_param_history.f-      END DO ! ICOMPO=1,ISOT
+wri_param_history.f-
+wri_param_history.f-      RETURN
+wri_param_history.f-      END
+--
+difmat_dmt.f:     &          (NZDMT    ,IVPAR    ,PARC     ,INORPAR  ,NZONE_PAR
+difmat_dmt.f-     &          ,NTYPAR   ,NZPAR    ,IXDMT    ,NUMNP    ,NPAR
+difmat_dmt.f-     &          ,INPWR    ,MAINFI   ,IOINV    ,NPBMX    ,NPARNP)
+difmat_dmt.f-
+difmat_dmt.f-************************************************************************
+difmat_dmt.f-*
+--
+difmat_dmt.f:*      IVPAR (NZPAR)       Global number of all parameters
+difmat_dmt.f-*      PARC (NZPAR)        Current value of all parameters
+difmat_dmt.f-*      INORPAR (NTYPAR)    Pointers to each type of parameters
+difmat_dmt.f-*      NZONE_PAR(NTYPAR)    Number of zones of each type of parameters
+difmat_dmt.f-*      NTYPAR              Number of types of parameters
+difmat_dmt.f-*      NZPAR               Total number of parameters
+--
+difmat_dmt.f:     .        NZPAR, IVPAR, IST, IN_IV_MZ, IN_RV_MZ,NPBMX
+difmat_dmt.f-     ;       , IXDMT   ,NPARNP
+difmat_dmt.f-
+difmat_dmt.f-      REAL*8 PARC
+difmat_dmt.f-
+difmat_dmt.f-* .............................................................. IO unit numbers
+--
+difmat_dmt.f:     .(NUM_ZON,  IUNIN,  IVPAR,  PARC,INORPAR,NZONE_PAR,NTYPAR,
+difmat_dmt.f-     .   NZPAR,  IXDMT,  NUMNP,   NPAR,   IV(IN_IV_MZ), MXIV_MZ,
+difmat_dmt.f-     . RV(IN_RV_MZ),   MXRV_MZ,IOINV,   IERR, MAINF ,NPBMX   ,NPARNP)
+difmat_dmt.f-
+difmat_dmt.f-         IF (IERR.GT.0) THEN           ! Errors when reading mat. diffusion zone
+difmat_dmt.f-
+--
+provisional.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+provisional.f-*  IOLG_PAR               Array containing all logarithmic options of           
+provisional.f-*                         estimated parameters                                  
+provisional.f-*  IOWRITE                Array containing all output options                   
+provisional.f-*  IPAR_DIR               Array containing all integer direct problem           
+provisional.f-*                         parameters                                            
+--
+watvol_ini.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+watvol_ini.f-*  LNNDEL                 Number of nodes at every element
+watvol_ini.f-*  LXPAREL                Array containing zone numbers for a given             
+watvol_ini.f-*                         element parameter
+watvol_ini.f-*  ACTH                   Aquifer thickness of every element. Cross sectional   
+watvol_ini.f-*                         area for 1-D elements, thickness for 2-D elements.
+--
+jac_h.f:     &         ,ITYPDFLU ,IVPAR    ,IXPARNP  ,KXX      ,LDIM
+jac_h.f-     &         ,LMXNDL   ,LNNDEL   ,LTYPE    ,LXPAREL  ,MAINF
+jac_h.f-     &         ,MAXNB    ,MAXNBF   ,MAXPG    ,NBAND1
+jac_h.f-     &         ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG
+jac_h.f-     &         ,NFNLTIP  ,NFTPAR   ,NINT     ,NPARALG  ,NPAREL
+jac_h.f-     &         ,NPARF    ,NPARNP   ,NPART    ,NPPEL    ,NPPNP
+--
+jac_h.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+jac_h.f:*  IVPAR                  Vector containing estimation index for all            
+jac_h.f-*                         parameters                                            
+jac_h.f-*  IXPARNP                Array containing zone number of each node j,          
+jac_h.f-*                         corresponding to INpar index parameter zone.          
+jac_h.f-*  KXX                    Node numbers of every element (counterclockwise       
+jac_h.f-*                         order).                                               
+--
+jac_h.f:     &          ,ISOZ(NZTRA),IVPAR(NZPAR),IXPARNP(NUMNP,NPARNP)
+jac_h.f-     &          ,KXX(LMXNDL,NUMEL)
+jac_h.f-     &          ,LDIM(NUMEL),LNNDEL(NUMEL),LTYPE(NUMEL)
+jac_h.f-     &          ,LXPAREL(NUMEL,NPAREL),NFNLPAR(NZPAR),NFNLPRG(8,NFNL)
+jac_h.f-     &          ,NFNLTIP(NFNL),NFTPAR(NZPAR),NZONE_PAR(NTYPAR)
+jac_h.f-
+--
+jac_h.f:     &          ,IOFMLF   ,ISOZ     ,IVPAR    ,KXX      ,LDIM
+jac_h.f-     &          ,LMXNDL   ,LNNDEL   ,LTYPE    ,LXPAREL  ,MAXPG
+jac_h.f-     &          ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG  ,NFNLTIP
+jac_h.f-     &          ,NFTPAR   ,NINT     ,NPAREL   ,NPARF    ,NTYPAR
+jac_h.f-     &          ,NTYPEL   ,NUMEL    ,NUMNP    ,NZONE_PAR,NZPAR
+jac_h.f-     &          ,NZTRA    ,PARACD   ,PARC     ,POINTWEIGHT
+--
+jac_h.f:     &        ,IOFLLI   ,IOFMLF   ,IVPAR    ,KXX      ,LMXNDL
+jac_h.f-     &        ,LNNDEL   ,LXPAREL  ,NFLAGS   ,NFNL     ,NFNLPAR
+jac_h.f-     &        ,NFNLPRG  ,NFNLTIP  ,NFTPAR   ,NINT     ,NPAREL
+jac_h.f-     &        ,NPARF    ,NPPEL    ,NTYPAR   ,NUMEL    ,NUMNP
+jac_h.f-     &        ,NZONE_PAR,NZPAR    ,PARACD   ,PARC     ,PAREL
+jac_h.f-     &        ,IDIMWGT  ,WGT_PAR  ,IPNT_PAR ,NPAR     ,IPOS
+--
+jac_h.f:     &            ,IOCAP    ,IOFMLT   ,IOTRLI   ,IVPAR    ,KXX
+jac_h.f-     &            ,LMXNDL   ,LNNDEL   ,LXPAREL  ,NFLAGS   ,NFNL
+jac_h.f-     &            ,NFNLPAR  ,NFNLPRG  ,NFNLTIP  ,NFTPAR   ,NINT
+jac_h.f-     &            ,NPARF    ,NPAREL   ,NPPEL    ,1        ,NTYPAR
+jac_h.f-     &            ,NUMEL    ,NUMNP    ,NZONE_PAR,NZPAR    ,PARACD
+jac_h.f-     &            ,PARC     ,PAREL    ,IDIMWGT  ,WGT_PAR  ,IPNT_PAR
+--
+jac_h.f:     &        ,IODENS   ,IOFLLI   ,IOFMLF   ,IOVRWC   ,IVPAR
+jac_h.f-     &        ,KXX      ,LMXNDL   ,LNNDEL   ,LTYPE    ,LXPAREL
+jac_h.f-     &        ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG  ,NFNLTIP
+jac_h.f-     &        ,NFTPAR   ,NINT     ,NPAREL   ,NPARF    ,NTYPAR
+jac_h.f-     &        ,NUMEL    ,NUMNP    ,NZONE_PAR,NZPAR    ,PARACD
+jac_h.f-     &        ,PARC     ,THETAT   ,IDIMWGT  ,WGT_PAR  ,IPNT_PAR
+--
+jac_h.f:     &        ,IOVRWC   ,IVPAR    ,KXX      ,LMXNDL   ,LNNDEL
+jac_h.f-     &        ,LXPAREL  ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG
+jac_h.f-     &        ,NFNLTIP  ,NFTPAR   ,NINT     ,NPARF    ,NPAREL
+jac_h.f-     &        ,NTYPAR   ,NUMEL    ,NUMNP    ,NZONE_PAR,NZPAR
+jac_h.f-     &        ,PARACD   ,PARC     ,IDIMWGT  ,WGT_PAR  ,IPNT_PAR
+jac_h.f-     &        ,IPOS     ,DERIV)
+--
+jac_h.f:     &            ,IDIMAFLU ,IDIMDERH ,INEW     ,IVPAR(INORPAR(9)+1)
+jac_h.f-     &            ,IXPARNP(1,INCHP)   ,KXX      ,LMXNDL   ,LNNDEL
+jac_h.f-     &            ,NPARF    ,NUMEL    ,NUMNP    ,NZONE_PAR(4)
+jac_h.f-     &            ,IDIMWGT  ,NZPAR    ,IPNT_PAR)
+jac_h.f-
+jac_h.f-
+--
+jac_h.f:     &            ,IDIMDFLU,IDIMFNT  ,INEW     ,INTI,IVPAR(INORPAR(9)+1)
+jac_h.f-     &            ,IXPARNP(1,INCHP)   ,KXX      ,LMXNDL   ,LNNDEL
+jac_h.f-     &            ,NFTPAR(INORPAR(9)+1)         ,NINT     ,NPARF
+jac_h.f-     &            ,NUMEL    ,NUMNP    ,NZONE_PAR(4)       ,THETAF
+jac_h.f-     &            ,TINC     ,IDIMWGT  ,NZPAR    ,IPNT_PAR)
+jac_h.f-
+--
+jac_h.f:     &            ,IOCAP    ,IOFLLI   ,IOFMLF   ,IVPAR    ,IXPARNP
+jac_h.f-     &            ,KXX      ,LMXNDL   ,NFLAGS   ,NFNL     ,NFNLPAR
+jac_h.f-     &            ,NFNLPRG  ,NFNLTIP  ,NFTPAR   ,NINT     ,I
+jac_h.f-     &            ,NPARF    ,NPARNP   ,1        ,NTYPAR   ,NUMEL
+jac_h.f-     &            ,NUMNP    ,NZONE_PAR,NZPAR    ,PARACD   ,PARC
+jac_h.f-     &            ,THETAF   ,TINC     ,TINTERVOBS         ,IDIMWGT
+--
+jac_h.f:     &          ,IODENS   ,IOFLLI   ,IOFMLF   ,IVPAR    ,IXPARNP
+jac_h.f-     &          ,KXX      ,LMXNDL   ,NFLAGS   ,NFNL     ,NFNLPAR
+jac_h.f-     &          ,NFNLPRG  ,NFNLTIP  ,NFTPAR   ,NINT     ,I
+jac_h.f-     &          ,NPARF    ,NPARNP   ,NPPNP    ,1        ,NTYPAR
+jac_h.f-     &          ,NUMEL    ,NUMNP    ,NZONE_PAR,NZPAR    ,PARACD
+jac_h.f-     &          ,PARC     ,PARNP    ,IDIMWGT  ,WGT_PAR  ,IPNT_PAR
+--
+jac_h.f:     &            ,IVPAR    ,IXPARNP  ,KXX      ,LMXNDL   ,NFLAGS
+jac_h.f-     &            ,NFNL     ,NFNLPAR  ,NFNLPRG  ,NFNLTIP  ,NFTPAR
+jac_h.f-     &            ,NINT     ,I        ,NPARF    ,NPARNP   ,NPPNP
+jac_h.f-     &            ,1        ,NTYPAR   ,NUMEL    ,NUMNP    ,NZONE_PAR
+jac_h.f-     &            ,NZPAR    ,PARACD   ,PARC     ,PARNP    ,IDIMWGT
+jac_h.f-     &            ,WGT_PAR  ,IPNT_PAR ,IPOS     ,DERIV)
+--
+jac_h.f:     &            ,IOFMLT   ,IOTRLI   ,IVPAR    ,IXPARNP  ,KXX
+jac_h.f-     &            ,LMXNDL   ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG
+jac_h.f-     &            ,NFNLTIP  ,NFTPAR   ,NINT     ,I        ,NPARF
+jac_h.f-     &            ,NPARNP   ,NPPNP    ,1        ,NTYPAR   ,NUMEL
+jac_h.f-     &            ,NUMNP    ,NZONE_PAR,NZPAR    ,PARACD   ,PARC
+jac_h.f-     &            ,PARNP    ,IDIMWGT  ,WGT_PAR  ,IPNT_PAR ,IPOS
+--
+init_inv_prob_info.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+init_inv_prob_info.f-*  IXPARNP                Array containing zone number of each node j,          
+init_inv_prob_info.f-*                         corresponding to INpar index parameter zone.          
+init_inv_prob_info.f-*  NFTPAR                 Vector containing time function number at every       
+init_inv_prob_info.f-*                         parameter zone                                        
+init_inv_prob_info.f-*  PARC                   Vector containing calculated values for all           
+--
+transdens.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR
+transdens.f-*  IOLG_PAR               Array containing all logarithmic options of
+transdens.f-*                         estimated parameters
+transdens.f-*  IOWRITE                Array containing all output options
+transdens.f-*  IPAR_DIR               Array containing all integer direct problem
+transdens.f-*                         parameters
+--
+transdens.f:       IDIVPAR=IDNFNLPAR+NZPAR                    !IVPAR
+transdens.f:       IOLD=IDIVPAR+4*NZPAR
+transdens.f-
+transdens.f-       IF (IOINV.GT.0) THEN
+transdens.f-         IDIDMBLCVP=IOLD                           !IDMBLCVP
+transdens.f-         IDIPOS=IDIDMBLCVP+NPAR                    !IPOS
+transdens.f-         IDIPNT_PAR=IDIPOS+NPAR                    !IPNT_PAR
+--
+transdens.f:     ;,IDIVPAR  ,IDIDMBLCVP
+transdens.f-     ;,IDLXPAREL   ,IDIXPARNP
+transdens.f-     ;
+transdens.f-     ;!--------------------------------------------------- Discretization arrays
+transdens.f-     ;,IDKXX     ,IDLTYPE   ,IDLNNDEL    ,IDLDIM
+transdens.f-     ;,IDIBTCO   ,IDINDPAR
+--
+transdens.f:     ;,IV(IDIVPAR)  ,IV(IDIDMBLCVP),IV(IDLXPAREL)   ,IV(IDIXPARNP)
+transdens.f-     ;
+transdens.f-     ;!--------------------------------------------------- Discretization arrays
+transdens.f-     ;,IV(IDKXX)     ,IV(IDLTYPE)   ,IV(IDLNNDEL)    ,IV(IDLDIM)
+transdens.f-     ;,IV(IDIBTCO)   ,IV(IDINDPAR)
+transdens.f-     ;!----------------------------------------------------Sparse storage arrays
+--
+sim_jac.f:     &,IVPAR
+sim_jac.f-     &,IXPARNP   ,KINT      ,KXX         ,LDIM
+sim_jac.f-     &,LINMET    ,LMXNDL    ,LNNDEL      ,GRADLOC  ,LTYPE   
+sim_jac.f-     &,LXPAREL   ,MAXITER     ,MAXNB    ,MAXNBF
+sim_jac.f-     &,MAXNN     ,MAXPG
+sim_jac.f-     &,MIN_STOP  ,NBAND       ,NBAND1   
+--
+sim_jac.f:     &          ,ISOZ(NZTRA)                  ,IVPAR(NZPAR)
+sim_jac.f-     &          ,IXPARNP(NUMNP,NPARNP,NPBMX)  ,KINT(NINT)
+sim_jac.f-     &          ,KXX(LMXNDL,NUMEL)
+sim_jac.f-     &          ,LDIM(NUMEL)                  ,LINMET(3,2)
+sim_jac.f-     &          ,LNNDEL(NUMEL)                ,LTYPE(NUMEL)               
+sim_jac.f-     &          ,LXPAREL(NUMEL,NPAREL,NPBMX)  ,NFNLPAR(NZPAR)
+--
+sim_jac.f:     &         ,ITYPDFLU  ,IVPAR    ,IXPARNP  ,KXX      ,LDIM
+sim_jac.f-     &         ,LMXNDL    ,LNNDEL   ,LTYPE    ,LXPAREL  ,MAINF
+sim_jac.f-     &         ,MAXNB     ,MAXNBF   ,MAXPG    ,NBAND1
+sim_jac.f-     &                    ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG
+sim_jac.f-     &         ,NFNLTIP   ,NFTPAR   ,NINT     ,NPARALG  ,NPAREL
+sim_jac.f-     &         ,NPARF     ,NPARNP   ,NPAR     ,NPPEL    ,NPPNP
+--
+sim_jac.f:     ;          ,ITYPAFLU ,ITYPATRA ,ITYPDFLU ,ITYPDTRA ,IVPAR
+sim_jac.f-     ;          ,IXPARNP(1,1,IPBFL) ,IXPARNP(1,1,IPBTP) ,KXX      ,LDIM
+sim_jac.f-     ;          ,LMXNDL   ,LNNDEL
+sim_jac.f-     ;          ,LTYPE    ,LXPAREL(1,1,IPBTP)  ,LXPAREL(1,1,IPBFL) 
+sim_jac.f-     ;          ,MAINF
+sim_jac.f-     ;          ,MAXNB    ,MAXNBF   ,MAXPG    ,NBAND1   ,NFLAGS
+--
+der_leak.f:     &          ,IVPAR    ,IXPARNP  ,KXX      ,LMXNDL   ,NFLAGS
+der_leak.f-     &          ,NFNL     ,NFNLPAR  ,NFNLPRG  ,NFNLTIP  ,NFTPAR
+der_leak.f-     &          ,NINT     ,NODE     ,NPAR     ,NPARNP   ,NPPNP
+der_leak.f-     &          ,NPZON    ,NTYPAR   ,NUMEL    ,NUMNP    ,NZONE_PAR
+der_leak.f-     &          ,NZPAR    ,PARACD   ,PARC     ,PARNP    ,IDIMWGT
+der_leak.f-     &          ,WGT_PAR  ,IPNT_PAR ,IPOS     ,DERIV)
+--
+der_leak.f:      INTEGER*4::IFLAGS(NFLAGS)        ,INORPAR(NTYPAR)  ,IVPAR(NZPAR)
+der_leak.f-     &          ,IXPARNP(NUMNP,NPARNP) ,KXX(LMXNDL,NUMEL),NFNLPAR(NZPAR)
+der_leak.f-     &          ,NFNLPRG(8,NFNL)       ,NFNLTIP(NFNL)    ,NFTPAR(NZPAR)
+der_leak.f-     &          ,NZONE_PAR(NTYPAR)    ,IDIMWGT  ,IPNT_PAR
+der_leak.f-
+der_leak.f-      REAL*8::CAUX1(NUMNP)              ,CFPARNP(NUMNP,NPARNP)
+--
+der_leak.f:      IP = IVPAR(JJ)
+der_leak.f-
+der_leak.f-      IF (IP.NE.0.OR.IOFLLI.NE.0) THEN
+der_leak.f-
+der_leak.f-
+der_leak.f-C------------------------- Stores in CHP the prescribed head value at node I
+--
+der_leak.f:     & ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG
+der_leak.f-     & ,PARACD   ,PARC(INORPAR(19)+1),HCALIT   ,HCALAN   ,XPARAM
+der_leak.f-     ; ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+der_leak.f-
+der_leak.f-          IF (NPTOT.GT.0) THEN 
+der_leak.f-
+--
+der_leak.f:      IP = IVPAR(JH)
+der_leak.f-
+der_leak.f-      IF (IP.NE.0.OR.IOFLLI.NE.0) THEN
+der_leak.f-
+der_leak.f-C------------------------- Stores in ALF the leakage coefficient value at node I
+der_leak.f-
+--
+der_leak.f:     & ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG
+der_leak.f-     & ,PARACD   ,PARC(INORPAR(19)+1),HCALIT   ,HCALAN   ,XPARAM
+der_leak.f-     ; ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+der_leak.f-
+der_leak.f-          IF (NPTOT.GT.0) THEN
+der_leak.f-
+--
+dertra.f:     &          ,IOFMLF   ,ISOZ     ,IVPAR    ,KXX      ,LDIM
+dertra.f-     &          ,LMXNDL   ,LNNDEL   ,LTYPE    ,LXPAREL  ,MAXPG
+dertra.f-     &          ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG  ,NFNLTIP
+dertra.f-     &          ,NFTPAR   ,NINT     ,NPAREL   ,NPARF    ,NTYPAR
+dertra.f-     &          ,NTYPEL   ,NUMEL    ,NUMNP    ,NZONE_PAR,NZPAR
+dertra.f-     &          ,NZTRA    ,PARACD   ,PARC     ,POINTWEIGHT
+--
+dertra.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+dertra.f-*  ISOZ                   Anisotropy of every transmissivity zone               
+dertra.f:*  IVPAR                  Vector containing estimation index for all            
+dertra.f-*                         parameters                                            
+dertra.f-*  KXX                    Node numbers of every element (counterclockwise       
+dertra.f-*                         order).                                               
+dertra.f-*  LDIM                   Vector containing the dimension of each element       
+dertra.f-*  LNNDEL                 Number of nodes at every element                      
+--
+dertra.f:     &          ,IVPAR(NZPAR)  ,KXX(LMXNDL,NUMEL) ,LDIM(NUMEL)
+dertra.f-     &          ,LNNDEL(NUMEL) ,LTYPE(NUMEL)      ,LXPAREL(NUMEL,NPAREL)
+dertra.f-     &          ,NFNLPAR(NZPAR),NFNLPRG(8,NFNL)   ,NFTPAR(NZPAR)
+dertra.f-     &          ,NFNLTIP(NFNL) ,NZONE_PAR(NTYPAR)
+dertra.f-
+dertra.f-      
+--
+dertra.f:               IP = IVPAR(INORPAR(ITRA)+IZON)
+dertra.f-
+dertra.f-
+dertra.f-C------------------------- Derivatives have to be computed if IP>0 or 
+dertra.f-C------------------------- even when the zonal parameter is not estimated, it
+dertra.f-C------------------------- may depend on some generic parameters that may have 
+--
+dertra.f:     ; ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG  
+dertra.f-     ; ,PARACD   ,PARC(INORPAR(19)+1),HCALIT   ,HCALAN   ,XPARAM
+dertra.f-     ; ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+dertra.f-
+dertra.f-
+dertra.f-C------------------------- When no estimated parameters
+--
+transin4.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR
+transin4.f-*  IOLG_PAR               Array containing all logarithmic options of
+transin4.f-*                         estimated parameters
+transin4.f-*  IOWRITE                Array containing all output options
+transin4.f-*  IPAR_DIR               Array containing all integer direct problem
+transin4.f-*                         parameters
+--
+transin4.f:       IDIVPAR=IDNFNLPAR+NZPAR                    !IVPAR
+transin4.f:       IOLD=IDIVPAR+4*NZPAR
+transin4.f-
+transin4.f-       IF (IOINV.GT.0) THEN
+transin4.f-         IDIDMBLCVP=IOLD                           !IDMBLCVP
+transin4.f-         IDIPOS=IDIDMBLCVP+NPAR                    !IPOS
+transin4.f-         IDIPNT_PAR=IDIPOS+NPAR                    !IPNT_PAR
+--
+transin4.f:     ;,IDIVPAR  ,IDIDMBLCVP
+transin4.f-     ;,IDLXPAREL   ,IDIXPARNP
+transin4.f-     ;
+transin4.f-     ;!--------------------------------------------------- Discretization arrays
+transin4.f-     ;,IDKXX     ,IDLTYPE   ,IDLNNDEL    ,IDLDIM
+transin4.f-     ;,IDIBTCO   ,IDINDPAR
+--
+transin4.f:     ;,IV(IDIVPAR)  ,IV(IDIDMBLCVP),IV(IDLXPAREL)   ,IV(IDIXPARNP)
+transin4.f-     ;
+transin4.f-     ;!--------------------------------------------------- Discretization arrays
+transin4.f-     ;,IV(IDKXX)     ,IV(IDLTYPE)   ,IV(IDLNNDEL)    ,IV(IDLDIM)
+transin4.f-     ;,IV(IDIBTCO)   ,IV(IDINDPAR)
+transin4.f-     ;!----------------------------------------------------Sparse storage arrays
+--
+dercoe.f:     &          ,IOCAP    ,IODENS   ,IOFMLT   ,IOTRLI   ,IVPAR
+dercoe.f-     &          ,IXPARNP  ,KXX      ,LMXNDL   ,LNNDEL   ,LXPAREL
+dercoe.f-     &          ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG  ,NFNLTIP
+dercoe.f-     &          ,NFTPAR   ,NINT     ,NPAR     ,NPAREL   ,NPARNP
+dercoe.f-     &          ,NPPEL    ,NPPNP    ,NPZON    ,NTYPAR   ,NUMEL
+dercoe.f-     &          ,NUMNP    ,NZONE_PAR,NZPAR    ,PARACD   ,PARC
+--
+dercoe.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+dercoe.f:*  IVPAR                  Vector containing estimation index for all            
+dercoe.f-*                         parameters                                            
+dercoe.f-*  IXPARNP                Array containing zone number of each node j,          
+dercoe.f-*                         corresponding to INpar index parameter zone.          
+dercoe.f-*  KXX                    Node numbers of every element (counterclockwise       
+dercoe.f-*                         order).                                               
+--
+dercoe.f:     &          ,IVPAR(NZPAR)   ,IXPARNP(NUMNP,NPARNP),KXX(LMXNDL,NUMEL)
+dercoe.f-     &          ,LNNDEL(NUMEL)  ,LXPAREL(NUMEL,NPAREL),NFNLPAR(NZPAR)
+dercoe.f-     &          ,NFNLPRG(8,NFNL),NFNLTIP(NFNL)        ,NFTPAR(NZPAR)
+dercoe.f-     &          ,NZONE_PAR(NTYPAR)
+dercoe.f-
+dercoe.f-      REAL*8::AREA(NUMEL)            ,CAUDAL(NUMNP)
+--
+dercoe.f:              IP = IVPAR(JJ)
+dercoe.f-
+dercoe.f-              IF (IP.NE.0 .OR. IOTRLI.NE.0) THEN
+dercoe.f-
+dercoe.f-                  IF (IOTRLI.NE.0) THEN
+dercoe.f-                      NCNF = NFNLPAR(JJ)
+--
+dercoe.f:     &    ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG
+dercoe.f-     &    ,PARACD   ,PARC(INORPAR(18)+1),CCALIT   ,CCALAN   ,XPARAM
+dercoe.f-     ;    ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+dercoe.f-
+dercoe.f-                  IF (NPTOT.NE.0) THEN
+dercoe.f-
+--
+dercoe.f:              IP = IVPAR(JJ)
+dercoe.f-
+dercoe.f-C------------------------- the derivative of the parameter is computed
+dercoe.f-C------------------------- if needed
+dercoe.f-
+dercoe.f-              IF (IP.NE.0 .OR. IOTRLI.NE.0) THEN
+--
+dercoe.f:     &    ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG
+dercoe.f-     &    ,PARACD   ,PARC(INORPAR(18)+1),CCALIT   ,CCALAN   ,XPARAM
+dercoe.f-     ;    ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+dercoe.f-
+dercoe.f-                  IF (NPTOT.GT.0) THEN
+dercoe.f-
+--
+dercoe_nod_flu.f:     &          ,IOFMLT   ,IOTRLI   ,IVPAR    ,IXPARNP  ,KXX
+dercoe_nod_flu.f-     &          ,LMXNDL   ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG
+dercoe_nod_flu.f-     &          ,NFNLTIP  ,NFTPAR   ,NINT     ,NODE     ,NPAR
+dercoe_nod_flu.f-     &          ,NPARNP   ,NPPNP    ,NPZON    ,NTYPAR   ,NUMEL
+dercoe_nod_flu.f-     &          ,NUMNP    ,NZONE_PAR,NZPAR    ,PARACD   ,PARC
+dercoe_nod_flu.f-     &          ,PARNP    ,IDIMWGT  ,WGT_PAR  ,IPNT_PAR ,IPOS
+--
+dercoe_nod_flu.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+dercoe_nod_flu.f:*  IVPAR                  Vector containing estimation index for all            
+dercoe_nod_flu.f-*                         parameters                                            
+dercoe_nod_flu.f-*  IXPARNP                Array containing zone number of each node j,          
+dercoe_nod_flu.f-*                         corresponding to INpar index parameter zone.          
+dercoe_nod_flu.f-*  KXX                    Node numbers of every element (counterclockwise       
+dercoe_nod_flu.f-*                         order).                                               
+--
+dercoe_nod_flu.f:     &          ,IVPAR(NZPAR)   ,IXPARNP(NUMNP,NPARNP),KXX(LMXNDL,NUMEL)
+dercoe_nod_flu.f-     &          ,NFNLPAR(NZPAR) ,NFNLPRG(8,NFNL)      ,NFNLTIP(NFNL)
+dercoe_nod_flu.f-     &          ,NFTPAR(NZPAR)  ,NZONE_PAR(NTYPAR)
+dercoe_nod_flu.f-
+dercoe_nod_flu.f-      REAL*8::CCALAN(NUMNP)         ,CCALIT(NUMNP)
+dercoe_nod_flu.f-     &       ,CFPARNP(NUMNP,NPARNP) ,DERH(NUMNP,NPAR,IDIMDERH)
+--
+dercoe_nod_flu.f:          IP = IVPAR(JJ)
+dercoe_nod_flu.f-      
+dercoe_nod_flu.f-          IF (IP.NE.0 .OR. IOTRLI.NE.0) THEN
+dercoe_nod_flu.f-
+dercoe_nod_flu.f-              IF (IOTRLI.NE.0) THEN
+dercoe_nod_flu.f-                  NCNF = NFNLPAR(JJ)
+--
+dercoe_nod_flu.f:     &    ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG
+dercoe_nod_flu.f-     &    ,PARACD   ,PARC(INORPAR(18)+1),CCALIT   ,CCALAN   ,XPARAM
+dercoe_nod_flu.f-     ;    ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+dercoe_nod_flu.f-
+dercoe_nod_flu.f-              IF (NPTOT.GT.0) THEN
+dercoe_nod_flu.f-
+--
+endat.f:     ;,ISOZ     ,IVPAR    ,IXPARNP  ,KINT     ,KXX      ,LDIM     
+endat.f-     ;,LNNDEL   ,LTYPE    ,LXPAREL  ,NBUW     ,NFNLPAR  ,NFNLPRG  
+endat.f-     ;,NFNLTIP  ,NFTPAR   ,NOBUF    ,NOOBSIT  ,NZONE_PAR,PARACD   
+endat.f-     ;,PARZ     ,PARM     ,QXYZ     ,STPAR    ,TIME     ,TIT      
+endat.f-     ;,TOBS     ,VD       ,VOBS     ,WTOBSBU  ,WTOBSN   ,WTOBST   
+endat.f-     ;,WTOBSU   ,XNORVD   ,DEVNAME  ,FILENAME
+--
+endat.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+endat.f-*  IOCALBU                Calculation method for basic unit                     
+endat.f-*  IODEVICE               Column 1: Data type                                   
+endat.f-*                         Column 2: Status for calc. of obs.                    
+endat.f-*                         Column 3: Method of spat. integr.                     
+endat.f-*                         Column 4: Method of temp. integr.                     
+--
+endat.f:*  IVPAR                  Vector containing estimation index for all            
+endat.f-*                         parameters                                            
+endat.f-*  IXPARNP                Array containing zone number of each node j,          
+endat.f-*                         corresponding to INpar index parameter zone.          
+endat.f-*  KINT                   Number of solution time increments, between           
+endat.f-*                         successive observation times.                         
+--
+endat.f:     ;  IVPAR(NZPAR,4), IXPARNP(NUMNP,NPARNP,NPBMX), 
+endat.f-     ;  KINT(NINT), KXX(LMXNDL,NUMEL), LDIM(NUMEL), LNNDEL(NUMEL), 
+endat.f-     ;  LTYPE(NUMEL),LXPAREL(NUMEL,NPAREL,NPBMX), NFNLPAR(NZPAR), 
+endat.f-     ;  NFNLPRG(8,NFNL),NFNLTIP(8,NFNL), NFTPAR(NZPAR), HCALIT(NUMNP),
+endat.f-     ;  NZONE_PAR(NTYPAR),PARACD(3,NFNL), PARZ(NZPAR), PARM(NZPAR), 
+endat.f-     ;  QXYZ(IDIMQ,NUMEL),STPAR(NZPAR), TIME(NINT),
+--
+endat.f:     ; ,ISOZ      ,IVPAR    ,LDIM     ,NFNLPAR  ,NFTPAR    ,NZONE_PAR 
+endat.f-     ; ,PAR_WGT   ,PARC     ,PARM     ,PARZ     ,STPAR     ,WGT_PAR   
+endat.f-     ; ,NGROUP_ZN ,NPARDET  ,IOINV_GS ,WGT_UNK)    
+endat.f-
+endat.f-
+endat.f-C------------------------- Reads matrix diffusion zones
+--
+endat.f:     ; (NZDMT    ,IVPAR    ,PARZ     ,INORPAR   ,NZONE_PAR
+endat.f-     ; ,NTYPAR   ,NZPAR   ,IXPARNP(1,1,1)       ,NUMNP
+endat.f-     ; ,NPAR     ,IOWRITE(1)         ,MAINF     ,IOINV
+endat.f-     ; ,NPBMX    ,NPARNP)
+endat.f-
+endat.f-C------------------------- Reads nonlinear parameters and/or gravity direction
+--
+endat.f:     ;,COVPAR     ,FILENAME ,IDMBLCVP   ,IVPAR(1,3) ,IOPT_GS
+endat.f:     ;,IVPAR(1,1) ,STPAR)
+endat.f-
+endat.f-           END IF ! NBLCVP.GT.NPARDET
+endat.f-       END IF ! IOINV.GT.0 .AND. NPARDET.GT.0
+endat.f-
+endat.f-C_______________ Reads all input data related to geoestatistical inverse problem
+--
+endat.f:     ;,IPOLDRIFT_GS  ,IVARIO_GS   ,IVPAR        ,KXX        ,LNNDEL
+endat.f-     ;,LTYPE         ,LXPAREL     ,NZONE_PAR    ,PARZ       ,POSDIS_GS
+endat.f-     ;,POSMEAS_GS    ,POSZN_GS    ,SEARCH_GS    ,SUPBL_GS   ,TRIM_GS
+endat.f-     ;,VARIO_GS      ,VMEAS_GS    ,VSTATS_GS    ,WGT_PAR    ,PARC_GS)
+endat.f-
+endat.f-C------------------------- Ckecks number of errors (IERROR)
+--
+alpha.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+alpha.f-*  IODEVICE               Column 1: Data type                                   
+alpha.f-*                         Column 2: Flag for inclusion of data
+alpha.f-*                         Column 3: Method of spat. integr.                     
+alpha.f-*                         Column 4: Method of temp. integr.                     
+alpha.f-*                         Column 5: Number of integr. time                      
+--
+alpha.f:*  IVPAR                  Vector containing estimation index for all            
+alpha.f-*                         parameters                                            
+alpha.f-*  OBSCLASS               Array containing number of devices where a particular
+alpha.f-*                         type of state var. was measured
+alpha.f-*                         COLUMN 1 contains number of devices, while COLUMNS 2-?
+alpha.f-*                         contain identifiers to those devices
+--
+der_param.f:     ; ,IVPAR    ,KXX      ,NFNLPRG  ,PARACD   ,PRGC     ,VCAL 
+der_param.f-     ; ,VCALAN   ,XPARAM   ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR) 
+der_param.f-
+der_param.f-***************************************************************************** 
+der_param.f-* 
+der_param.f-* EXTERNAL VARIABLES: ARRAYS 
+--
+der_param.f:     ;   ,XPARAM(12)        ,NFNLTIP(NFNL)    ,IVPAR(NZPAR,4) 
+der_param.f-     ;   ,WGT_PAR(NZPAR*IDIMWGT)              ,IPNT_PAR(NZPAR*IDIMWGT) 
+der_param.f-  
+der_param.f-
+der_param.f-C------------------------- Computes time function contribution to parameter 
+der_param.f-C------------------------- value 
+--
+der_param.f:          DO I=IVPAR(JJ,1),IVPAR(JJ,2) 
+der_param.f-             DERIV(KONT)=WGT_PAR(I)*DERIVAUX
+der_param.f:             IF (IVPAR(JJ,4).EQ.1) 
+der_param.f-     ;           DERIV(KONT)=DERIV(KONT)*PARAMC*DLOG(10.0D0)
+der_param.f-             IPOS(KONT)=IPNT_PAR(I) 
+der_param.f-             KONT=KONT+1 
+der_param.f-          ENDDO 
+der_param.f:          NPTOT=IVPAR(JJ,2)-IVPAR(JJ,1)+1 
+der_param.f-
+der_param.f-C------------------------- First position in array DERIV for the derivatives 
+der_param.f-C------------------------- w.r.t. generic parameters 
+der_param.f-
+der_param.f-          INI=NPTOT+1 
+--
+der_param.f:     ;,VMED      ,DERIV(INI),IFLAGS   ,IPOS(INI),IVPAR    ,NFNLPRG 
+der_param.f-     ;,PARACD    ,PRGC      ,XPARAM) 
+der_param.f-
+der_param.f-             ELSE  IF (IOFML.EQ.2) THEN 
+der_param.f-
+der_param.f-                CALL FUNNOLI_IN 
+--
+der_param.f:     ;,VMEDOLD   ,DERIV1    ,IFLAGS   ,IPOS(INI),IVPAR    ,NFNLPRG 
+der_param.f-     ;,PARACD    ,PRGC      ,XPARAM) 
+der_param.f-
+der_param.f-                CALL FUNNOLI_IN 
+der_param.f-     ;(INDEX(1)  ,INDEX(2)  ,INPRGC   ,IOCAP    ,NFLAGS   ,NFNL 
+der_param.f-     ;,NFNLPARAM ,NFTIP     ,NPTOT    ,NZPAR    ,NZPRG    ,PARAMC 
+der_param.f:     ;,VMEDNEW   ,DERIV2    ,IFLAGS   ,IPOS(INI),IVPAR    ,NFNLPRG 
+der_param.f-     ;,PARACD    ,PRGC      ,XPARAM) 
+der_param.f-
+der_param.f-  
+der_param.f-                DO I=1,NPTOT 
+der_param.f-                   DERIV(INI+I-1)=EPS*DERIV2(I)+(1-EPS)*DERIV1(I) 
+--
+comp_param_flow.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+comp_param_flow.f-*  IPAR_DIR               Array containing all integer direct problem           
+comp_param_flow.f-*                         parameters                                            
+comp_param_flow.f-*  ISOZ                   Anisotropy of every transmissivity zone               
+comp_param_flow.f-*  IXPARNP                Array containing zone number of each node j,          
+comp_param_flow.f-*                         corresponding to INpar index parameter zone.          
+--
+derq_por.f:     &          ,IOCAP    ,IOFMLT   ,IOTRLI   ,IOVRWC   ,IVPAR
+derq_por.f-     &          ,KXX      ,LMXNDL   ,LNNDEL   ,LTYPE    ,LXPOR
+derq_por.f-     &          ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG  ,NFNLTIP
+derq_por.f-     &          ,NFTPAR   ,NINT     ,NPAR     ,NPAREL   ,NPPNP
+derq_por.f-     7          ,NTYPAR   ,NUMEL    ,NUMNP    ,NZONE_PAR,NZPAR
+derq_por.f-     &          ,PARACD   ,PARC     ,PARNP    ,IDIMWGT  ,WGT_PAR
+--
+derq_por.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+derq_por.f:*  IVPAR                  Vector containing estimation index for all            
+derq_por.f-*                         parameters                                            
+derq_por.f-*  KXX                    Node numbers of every element (counterclockwise       
+derq_por.f-*                         order).                                               
+derq_por.f-*  LNNDEL                 Number of nodes at every element                      
+derq_por.f-*  LTYPE                  Vector containing the type of each element            
+--
+derq_por.f:     &          ,INORPAR(NTYPAR) ,IVPAR(NZPAR)       ,KXX(LMXNDL,NUMEL)
+derq_por.f-     &          ,LNNDEL(NUMEL)   ,LTYPE(NUMEL)       ,LXPOR(NUMEL)
+derq_por.f-     &          ,NFNLPAR(NZPAR)  ,NFNLPRG(8,NFNL)    ,NFNLTIP(NFNL)
+derq_por.f-     &          ,NFTPAR(NZPAR)   ,NZONE_PAR(NTYPAR)
+derq_por.f-
+derq_por.f-      REAL*8::ACTH(NUMEL)        ,AREA(NUMEL)
+--
+derq_por.f:          IP = IVPAR(JJ)
+derq_por.f-          BETA_AREALN =BETAC*AREA(L)/NNUD
+derq_por.f-	    ACTHL = ACTH(L)
+derq_por.f-          LTY = LTYPE(L)
+derq_por.f-
+derq_por.f-	    IF (IP.NE.0 .OR. IOTRLI.NE.0) THEN
+--
+derq_por.f:     &    ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG
+derq_por.f-     &    ,PARACD   ,PARC(INORPAR(19)+1),CCALIT   ,CCALAN   ,XPARAM
+derq_por.f-     ;    ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+derq_por.f-
+derq_por.f-              IF (NPTOT.GT.0) THEN
+derq_por.f-          
+--
+generstat.f:*  IVPAR                  Vector containing estimation index for all            
+generstat.f-*                         parameters                                            
+generstat.f-*  PARM                   Vector containing measured values for all             
+generstat.f-*                         parameters                                            
+generstat.f-*
+generstat.f-* EXTERNAL VARIABLES: SCALARS
+--
+dercrd.f:     &          ,IOFMLT   ,IOTRLI   ,IOVRWC   ,ITPTVAR  ,IVPAR
+dercrd.f-     &          ,KXX      ,LDIM     ,LMXNDL   ,LNNDEL   ,LXPAREL
+dercrd.f-     &          ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG  ,NFNLTIP
+dercrd.f-     &          ,NFTPAR   ,NINT     ,NPAR     ,NPAREL   ,NPPEL
+dercrd.f-     &          ,NTYPAR   ,NUMEL    ,NUMNP    ,NZONE_PAR,NZPAR
+dercrd.f-     &          ,PARACD   ,PARC     ,PAREL    ,THETAT   ,WSPECHEAT
+--
+dercrd.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+dercrd.f:*  IVPAR                  Vector containing estimation index for all            
+dercrd.f-*                         parameters                                            
+dercrd.f-*  KXX                    Node numbers of every element (counterclockwise       
+dercrd.f-*                         order).                                               
+dercrd.f-*  LDIM                   Vector containing the dimension of each element       
+dercrd.f-*  LNNDEL                 Number of nodes at every element                      
+--
+dercrd.f:      INTEGER*4::IFLAGS(NFLAGS)       ,INORPAR(NTYPAR),IVPAR(NZPAR)
+dercrd.f-     &          ,KXX(LMXNDL,NUMEL)    ,LDIM(NUMEL)    ,LNNDEL(NUMEL)        
+dercrd.f-     &          ,LXPAREL(NUMEL,NPAREL),NFNLPAR(NZPAR) ,NFNLPRG(8,NFNL)
+dercrd.f-     &          ,NFNLTIP(NFNL)        ,NFTPAR(NZPAR)  ,NZONE_PAR(NTYPAR)
+dercrd.f-
+dercrd.f-      REAL*8::ACTH(NUMEL)                 ,AREA(NUMEL)
+--
+dercrd.f:          IP = IVPAR(JJ)
+dercrd.f-
+dercrd.f-          IF (IP.NE.0 .OR. IOTRLI.NE.0) THEN
+dercrd.f-
+dercrd.f-              NNUD = LNNDEL(L)
+dercrd.f-              LD = LDIM(L)
+--
+dercrd.f:     &    ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG
+dercrd.f-     &    ,PARACD   ,PARC(INORPAR(19)+1),CCALIT   ,CCALAN   ,XPARAM
+dercrd.f-     ;    ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+dercrd.f-
+dercrd.f-              IF (NPTOT.GT.0) THEN
+dercrd.f-
+--
+derfof.f:donde I va de IVPAR(JJ,1),IVPAR(JJ,2) con
+derfof.f-      NZFF = NZONE_PAR(19)
+derfof.f-   IF (NZFF.GT.0) THEN
+derfof.f-       DO IZON=1,NZFF
+derfof.f-           JJ = INORPAR(22)+IZON 
+derfof.f-           KONT=1 
+derfof.f:           DO I=IVPAR(JJ,1),IVPAR(JJ,2) 
+derfof.f-               DERIV(KONT)=WGT_PAR(I)*DERIVAUX
+derfof.f:               IF (IVPAR(JJ,4).EQ.1) THEN 
+derfof.f-                   DERIV(KONT)=DERIV(KONT)*PARAMC*DLOG(10.0D0)
+derfof.f-               END IF
+derfof.f-                   IPOS(KONT)=IPNT_PAR(I) 
+derfof.f-                   KONT=KONT+1 
+derfof.f:           ENDDO !I=IVPAR(JJ,1),IVPAR(JJ,2) 
+derfof.f-               
+derfof.f:           NPTOT=IVPAR(JJ,2)-IVPAR(JJ,1)+1 
+derfof.f-       ENDDO !IZON
+derfof.f-    ENDIF
+derfof.f-        
+derfof.f-CCCCCCESOT DEVERIA FUNCIONAR
+derfof.f-      NZFOF = NZONE_PAR(19)
+--
+derfof.f:              IP = IVPAR(JJ)
+derfof.f-              IF (IP.GT.0) THEN
+derfof.f:                  DO I=IVPAR(JJ,1),IVPAR(JJ,2) 
+derfof.f-                      DERIV=DERESDF(IZON)
+derfof.f:                      IF (IVPAR(JJ,4).EQ.1) THEN 
+derfof.f-                          DERIV=DERIV*PARAMC*DLOG(10.0D0)
+derfof.f-                      ENDIF
+derfof.f-                      IPOS=IPNT_PAR(I) 
+derfof.f-                      VJAC(NO, IPOS) = DERIV 
+derfof.f:                  ENDDO !I=IVPAR(JJ,1),IVPAR(JJ,2) 
+derfof.f-              ENDIF !IP.GT.0
+derfof.f-          ENDDO !IZON
+derfof.f-      ENDIF ! IOLG_PAR(19,2).GT.0 .AND. NZFOF.GT.0
+--
+der_presc_flow.f:     &         ,IODENS    ,IOFLLI   ,IOFMLF   ,IVPAR    ,IXPARNP
+der_presc_flow.f-     &         ,KXX       ,LMXNDL   ,NFLAGS   ,NFNL     ,NFNLPAR
+der_presc_flow.f-     &         ,NFNLPRG   ,NFNLTIP  ,NFTPAR   ,NINT     ,NODE
+der_presc_flow.f-     &         ,NPAR      ,NPARNP   ,NPPNP    ,NPZON    ,NTYPAR
+der_presc_flow.f-     &         ,NUMEL     ,NUMNP    ,NZONE_PAR,NZPAR    ,PARACD
+der_presc_flow.f-     &         ,PARC      ,PARNP    ,IDIMWGT  ,WGT_PAR  ,IPNT_PAR
+--
+der_presc_flow.f:      INTEGER*4::IFLAGS(NFLAGS)        ,INORPAR(NTYPAR)  ,IVPAR(NZPAR)
+der_presc_flow.f-     &          ,IXPARNP(NUMNP,NPARNP) ,KXX(LMXNDL,NUMEL),NFNLPAR(NZPAR)
+der_presc_flow.f-     &          ,NFNLPRG(8,NFNL)       ,NFNLTIP(NFNL)    ,NFTPAR(NZPAR)
+der_presc_flow.f-     &          ,NZONE_PAR(NTYPAR)     ,IDIMWGT  ,IPNT_PAR
+der_presc_flow.f-
+der_presc_flow.f-      REAL*8::CAUX1(NUMNP)              ,CFPARNP(NUMNP,NPARNP)
+--
+der_presc_flow.f:      IP = IVPAR(JJ)
+der_presc_flow.f-
+der_presc_flow.f-      IF (IP.NE.0.OR.IOFLLI.NE.0) THEN
+der_presc_flow.f-
+der_presc_flow.f-          IF (IOFLLI.NE.0) THEN
+der_presc_flow.f-              NCNF=NFNLPAR(JJ)
+--
+der_presc_flow.f:     &    ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG
+der_presc_flow.f-     &    ,PARACD   ,PARC(INORPAR(19)+1),HCALIT   ,HCALAN   ,XPARAM
+der_presc_flow.f-     ;    ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+der_presc_flow.f-
+der_presc_flow.f-          IF (NPTOT.GT.0) THEN 
+der_presc_flow.f-
+--
+derarr_tpt.f:     &          ,IFLAGS   ,INORPAR  ,IVPAR    ,KXX      ,LDIM
+derarr_tpt.f-     &          ,LNNDEL   ,LXPAREL  ,NFNLPAR  ,NFNLPRG  ,NFNLTIP
+derarr_tpt.f-     &          ,NFTPAR   ,NZONE_PAR,PARACD   ,PARC     ,PAREL
+derarr_tpt.f-     &          ,IODENS   ,DENSREF  ,CREF     ,IDIMWGT  ,WGT_PAR
+derarr_tpt.f-     &          ,IPNT_PAR ,IPOS     ,DERIV)
+derarr_tpt.f-
+--
+derarr_tpt.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+derarr_tpt.f:*  IVPAR                  Vector containing estimation index for all            
+derarr_tpt.f-*                         parameters                                            
+derarr_tpt.f-*  KXX                    Node numbers of every element (counterclockwise       
+derarr_tpt.f-*                         order).                                               
+derarr_tpt.f-*  LDIM                   Vector containing the dimension of each element       
+derarr_tpt.f-*  LNNDEL                 Number of nodes at every element                      
+--
+derarr_tpt.f:      INTEGER*4::IFLAGS(NFLAGS),INORPAR(NTYPAR) ,IVPAR(NZPAR)
+derarr_tpt.f-     &          ,KXX(LMXNDL,NUMEL) ,LDIM(NUMEL),LNNDEL(NUMEL)
+derarr_tpt.f-     &          ,LXPAREL(NUMEL,NPAREL),NFNLPAR(NZPAR) ,NFNLPRG(8,NFNL)
+derarr_tpt.f-     &          ,NFNLTIP(NFNL) ,NFTPAR(NZPAR),NZONE_PAR(NTYPAR)
+derarr_tpt.f-
+derarr_tpt.f-      REAL*8::AREA(NUMEL) ,PAREL(NUMEL,NPPEL),CAUX1(NUMNP)
+--
+derarr_tpt.f:          IP = IVPAR(JJ)
+derarr_tpt.f-          RECHARGE = PAREL(L,8)
+derarr_tpt.f-
+derarr_tpt.f-          IF (IP.NE.0 .OR. IOFLLI.NE.0) THEN
+derarr_tpt.f-
+derarr_tpt.f-              NNUD = LNNDEL(L)
+--
+derarr_tpt.f:     &    ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG
+derarr_tpt.f-     &    ,PARACD   ,PARC(INORPAR(19)+1),HCALIT   ,HCALAN   ,XPARAM
+derarr_tpt.f-     ;    ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+derarr_tpt.f-
+derarr_tpt.f-              IF (NPTOT.GT.0) THEN
+derarr_tpt.f-
+--
+derq_nud.f:     &          ,IOFMLF   ,IVPAR    ,IXPARNP  ,KXX      ,LMXNDL
+derq_nud.f-     &          ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG  ,NFNLTIP
+derq_nud.f-     &          ,NFTPAR   ,NINT     ,NPAR     ,NPARNP   ,NPPNP
+derq_nud.f-     &          ,NPZON    ,NTYPAR   ,NUMEL    ,NUMNP    ,NZONE_PAR
+derq_nud.f-     &          ,NZPAR    ,PARACD   ,PARC     ,PARNP    ,IDIMWGT
+derq_nud.f-     &          ,WGT_PAR  ,IPNT_PAR ,IPOS     ,DERIV)
+--
+derq_nud.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR
+derq_nud.f:*  IVPAR                  Vector containing estimation index for all
+derq_nud.f-*                         parameters
+derq_nud.f-*  IXPARNP                Array containing zone number of each node j,
+derq_nud.f-*                         corresponding to INpar index parameter zone.
+derq_nud.f-*  PARC                   Vector containing calculated values for all
+derq_nud.f-*                         parameters
+--
+derq_nud.f:     &          ,IVPAR(NZPAR)     ,IXPARNP(NUMNP,NPARNP),IFLAGS(NFLAGS)
+derq_nud.f-     &          ,KXX(LMXNDL,NUMEL),NFNLPAR(NZPAR)       ,NFNLPRG(8,NFNL)
+derq_nud.f-     &          ,NFNLTIP(NFNL)    ,NFTPAR(NZPAR)      ,NZONE_PAR(NTYPAR)
+derq_nud.f-
+derq_nud.f-      REAL*8::CAUDAL(NUMNP)          ,CAUX1(NUMNP)
+derq_nud.f-     &       ,CCALAN(NUMNP)          ,CCALIT(NUMNP)
+--
+derq_nud.f:                  IP = IVPAR(JJ)
+derq_nud.f-
+derq_nud.f-                  IF (IP.GT.0 .OR. IOFLLI.NE.0) THEN
+derq_nud.f-
+derq_nud.f-
+derq_nud.f-                      IF (IOFLLI.NE.0) THEN
+--
+derq_nud.f:     &    ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG
+derq_nud.f-     &    ,PARACD   ,PARC(INORPAR(19)+1),CCALIT   ,CCALAN   ,XPARAM
+derq_nud.f-     ;    ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+derq_nud.f-
+derq_nud.f-
+derq_nud.f-
+--
+derq_nud.f:                  IP = IVPAR(JJ)
+derq_nud.f-
+derq_nud.f-                  IF (IP.GT.0 .OR. IOFLLI.NE.0) THEN
+derq_nud.f-
+derq_nud.f-
+derq_nud.f-                      IF (IOFLLI.NE.0) THEN
+--
+derq_nud.f:     &    ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG
+derq_nud.f-     &    ,PARACD   ,PARC(INORPAR(19)+1),CCALIT   ,CCALAN   ,XPARAM
+derq_nud.f-     ;    ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+derq_nud.f-                      
+derq_nud.f-
+derq_nud.f-                      IF (NPTOT.GT.0) THEN
+--
+derq_nud.f:                  IP = IVPAR(JJ)
+derq_nud.f-
+derq_nud.f-                  IF (IP.GT.0 .OR. IOFLLI.NE.0) THEN
+derq_nud.f-
+derq_nud.f-
+derq_nud.f-                      IF (IOFLLI.NE.0) THEN
+--
+derq_nud.f:     &    ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG
+derq_nud.f-     &    ,PARACD   ,PARC(INORPAR(19)+1),CCALIT   ,CCALAN   ,XPARAM
+derq_nud.f-     ;    ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+derq_nud.f-
+derq_nud.f-                      IF (NPTOT.GT.0) THEN
+derq_nud.f-
+--
+der_presc_head.f:     &          ,IOCAP    ,IOFLLI   ,IOFMLF   ,IVPAR    ,IXPARNP
+der_presc_head.f-     &          ,KXX      ,LMXNDL   ,NFLAGS   ,NFNL     ,NFNLPAR
+der_presc_head.f-     &          ,NFNLPRG  ,NFNLTIP  ,NFTPAR   ,NINT     ,NODE
+der_presc_head.f-     &          ,NPAR     ,NPARNP   ,NPZON    ,NTYPAR   ,NUMEL
+der_presc_head.f-     &          ,NUMNP    ,NZONE_PAR,NZPAR    ,PARACD   ,PARC
+der_presc_head.f-     &          ,THETAF   ,TINC     ,TINTERVOBS         ,IDIMWGT
+--
+der_presc_head.f:      INTEGER*4::IFLAGS(NFLAGS)        ,INORPAR(NTYPAR)  ,IVPAR(NZPAR)
+der_presc_head.f-     &          ,IXPARNP(NUMNP,NPARNP) ,KXX(LMXNDL,NUMEL),NFNLPAR(NZPAR)
+der_presc_head.f-     &          ,NFNLPRG(8,NFNL)       ,NFNLTIP(NFNL)    ,NFTPAR(NZPAR)
+der_presc_head.f-     &          ,NZONE_PAR(NTYPAR)
+der_presc_head.f-
+der_presc_head.f-      REAL*8::CFPARNP(NUMNP,NPARNP)  ,DERH(NUMNP,NPAR,IDIMDERH)
+--
+der_presc_head.f:      IP = IVPAR(JJ)
+der_presc_head.f-        
+der_presc_head.f-C------------------------- Derivatives have to be computed if IP>0 or
+der_presc_head.f-C------------------------- even when the zonal parameter is not estimated, it
+der_presc_head.f-C------------------------- may depend on some generic parameters that may have
+der_presc_head.f-C------------------------- to be estimated
+--
+der_presc_head.f:     &    ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG
+der_presc_head.f-     &    ,PARACD   ,PARC(INORPAR(19)+1),HCALIT   ,HCALAN   ,XPARAM
+der_presc_head.f-     ;    ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+der_presc_head.f-
+der_presc_head.f-
+der_presc_head.f-
+--
+entdat_groups_zones.f:     ;,IPOLDRIFT_GS  ,IVARIO_GS   ,IVPAR        ,KXX        ,LNNDEL
+entdat_groups_zones.f-     ;,LTYPE         ,LXPAREL     ,NZONE_PAR    ,PARZ       ,POSDIS_GS
+entdat_groups_zones.f-     ;,POSMEAS_GS    ,POSZN_GS    ,SEARCH_GS    ,SUPBL_GS   ,TRIM_GS
+entdat_groups_zones.f-     ;,VARIO_GS      ,VMEAS_GS    ,VSTATS_GS    ,WGT_PAR    ,PARC_GS)
+entdat_groups_zones.f-
+entdat_groups_zones.f-********************************************************************************
+--
+entdat_groups_zones.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+entdat_groups_zones.f-*  IPNT_PAR               Array contaning pointers to arrays DLT_PAR and WGT_PAR
+entdat_groups_zones.f-*  IPOLDRIFT_GS           Array containing polinomial drift options
+entdat_groups_zones.f-*  IVARIO_GS              Array containing integers defining all variograms
+entdat_groups_zones.f:*  IVPAR                  Array containing zonal estimation options and pointers
+entdat_groups_zones.f-*  IZONMEAS_GS            Array containing the measurement identifier contained in 
+entdat_groups_zones.f-*                         a given zone of a given group
+entdat_groups_zones.f-*  KXX                    Node numbers of every element (counterclockwise order)
+entdat_groups_zones.f-*  LNNDEL                 Number of nodes at every element                      
+entdat_groups_zones.f-*  LTYPE                  Vector containing the type of each element            
+--
+entdat_groups_zones.f:     ;         ,IVPAR(NZPAR,4),INORPAR(NTYPAR),KXX(LMXNDL,NUMEL)
+entdat_groups_zones.f-     ;         ,LNNDEL(NUMEL),LXPAREL(NUMEL,NPAREL,NPBMX),LTYPE(NUMEL)
+entdat_groups_zones.f-     ;         ,NZONE_PAR(NTYPAR),IPOLDRIFT_GS(9,NGROUP_ZN)
+entdat_groups_zones.f-     ;         ,IPNT_PAR(IDIMWGT*NZPAR)
+entdat_groups_zones.f-     ;         ,IVARIO_GS(IDIMIVARIO_GS,2,NGROUP_ZN)
+entdat_groups_zones.f-*,IZONMEAS_GS(MXNZON_GS,NGROUP_ZN)
+--
+entdat_groups_zones.f:     ;,COORDGR_GS(1,IGROUP)  ,DIVZN_GS   ,IVPAR(1,3)
+entdat_groups_zones.f-     ;,INORPAR     ,KXX      ,LNNDEL     ,LXPAREL(1,1,IPROBGR_GS)
+entdat_groups_zones.f-     ;,NZONE_PAR   ,POSZN_GS(1,1,IGROUP) ,POSDIS_GS(1,1,1,IGROUP)
+entdat_groups_zones.f-     ;,SUPBL_GS(4,IGROUP)) 
+entdat_groups_zones.f-
+entdat_groups_zones.f-C_______________________ Step 3: Reads search ellipsoids data, trimming limits
+--
+entdat_groups_zones.f:     ;,ZPOINT     ,AREA       ,COORD      ,FILENAME ,IVPAR(1,3) ,INORPAR
+entdat_groups_zones.f-     ;,KXX        ,LTYPE      ,LXPAREL)
+entdat_groups_zones.f-
+entdat_groups_zones.f-*                     IZONMEAS_GS(IACTZONE,IGROUP)=I
+entdat_groups_zones.f-
+entdat_groups_zones.f-                   END DO ! I=1,IOPT_GS(IGROUP,5)
+--
+entdat_groups_zones.f:     ;,ZPOINT     ,AREA       ,COORD      ,FILENAME ,IVPAR(1,3) ,INORPAR
+entdat_groups_zones.f-     ;,KXX        ,LTYPE      ,LXPAREL)
+entdat_groups_zones.f-
+entdat_groups_zones.f-                   END DO
+entdat_groups_zones.f-
+entdat_groups_zones.f-                END IF ! IO_KG_GS...
+--
+entdat_groups_zones.f:     ;,IVPAR(1,3)        ,INORPAR   ,KXX                 ,LNNDEL
+entdat_groups_zones.f-     ;,LTYPE             ,LXPAREL   ,POSMEAS_GS(1,1,1,IGROUP)
+entdat_groups_zones.f-     ;,POSZN_GS(1,1,IGROUP)         ,VMEAS_GS(1,1,1,IGROUP))
+entdat_groups_zones.f-
+entdat_groups_zones.f-             IF (IOINV.GT.0 .AND. IOPT_GS(IGROUP,6).EQ.0) 
+entdat_groups_zones.f-     ;          CALL ASS_EXT_DRIFT       ! Pilot points
+--
+entdat_groups_zones.f:     ;,IVPAR(1,3)        ,INORPAR             ,KXX         ,LNNDEL
+entdat_groups_zones.f-     ;,LTYPE             ,LXPAREL             ,POSMEAS_GS(1,1,1,IGROUP)
+entdat_groups_zones.f-     ;,POSZN_GS(1,1,IGROUP)                   ,VMEAS_GS(1,1,1,IGROUP))
+entdat_groups_zones.f-*     ;,IZONMEAS_GS(1,1))
+entdat_groups_zones.f-
+entdat_groups_zones.f-          END IF ! IO_KG_GS(IGROUP,1).EQ.2 ...
+--
+entdat_groups_zones.f:     ;,IOPT_GS(IGROUP,11) ,NTYPAR    ,NZPAR      ,FILENAME   ,IVPAR(1,3)
+entdat_groups_zones.f:     ;,INORPAR            ,IOPT_GS   ,IPNT_PAR   ,IVPAR(1,2) ,IVPAR(1,1)
+entdat_groups_zones.f-     ;,NZONE_PAR          ,PARZ      ,WGT_PAR)
+entdat_groups_zones.f-
+entdat_groups_zones.f-        END IF ! IOGREST_GS.EQ.1
+entdat_groups_zones.f-
+entdat_groups_zones.f-      END DO ! IGROUP=1,NGROUP_ZN
+--
+comp_param_tra.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+comp_param_tra.f-*  KXX                    Node numbers of every element (counterclockwise       
+comp_param_tra.f-*                         order).                                               
+comp_param_tra.f-*  LNNDEL                 Number of nodes at every element                      
+comp_param_tra.f-*  LXPAREL                Array containing zone numbers for a given             
+comp_param_tra.f-*                         element parameter                                     
+--
+derfod.f:     &          ,IOTRLI   ,IOVRWC   ,IVPAR    ,KXX      ,LDIM
+derfod.f-     &          ,LMXNDL   ,LNNDEL   ,LXPAREL  ,NFLAGS   ,NFNL
+derfod.f-     &          ,NFNLPAR  ,NFNLPRG  ,NFNLTIP  ,NFTPAR   ,NINT
+derfod.f-     &          ,NPAR     ,NPAREL   ,NPPEL    ,NTYPAR   ,NUMEL
+derfod.f-     &          ,NUMNP    ,NZONE_PAR,NZPAR    ,PARACD   ,PARC
+derfod.f-     &          ,PAREL    ,WATVOL   ,IDIMWGT  ,WGT_PAR  ,IPNT_PAR
+--
+derfod.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+derfod.f:*  IVPAR                  Vector containing estimation index for all            
+derfod.f-*                         parameters                                            
+derfod.f-*  KXX                    Node numbers of every element (counterclockwise       
+derfod.f-*                         order).                                               
+derfod.f-*  LDIM                   Vector containing the dimension of each element       
+derfod.f-*  LNNDEL                 Number of nodes at every element                      
+--
+derfod.f:      INTEGER*4::IFLAGS(NFLAGS)       ,INORPAR(NTYPAR),IVPAR(NZPAR) 
+derfod.f-     &          ,KXX(LMXNDL,NUMEL)    ,LDIM(NUMEL)    ,LNNDEL(NUMEL)
+derfod.f-     &          ,LXPAREL(NUMEL,NPAREL),NFNLPAR(NZPAR) ,NFNLPRG(8,NFNL)
+derfod.f-     &          ,NFNLTIP(NFNL)        ,NFTPAR(NZPAR)  ,NZONE_PAR(NTYPAR)
+derfod.f-
+derfod.f-
+--
+derfod.f:          IP = IVPAR(JJ)
+derfod.f-
+derfod.f-          IF (IP.NE.0 .OR. IOTRLI.NE.0) THEN
+derfod.f-              NNUD = LNNDEL(L)
+derfod.f-              LD = LDIM(L)
+derfod.f-              IF (IOTRLI.NE.0) THEN
+--
+derfod.f:     &    ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG
+derfod.f-     &    ,PARACD   ,PARC(INORPAR(19)+1),CCALIT   ,CCALAN   ,XPARAM
+derfod.f-     ;    ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+derfod.f-
+derfod.f-              IF (NPTOT.GT.0) THEN
+derfod.f-
+--
+funnoli_in.f:     ;,X         ,DERIV    ,IFLAGS   ,IPOS     ,IVPAR     ,NFNLPRG   
+funnoli_in.f-     ;,PARACD    ,PRGC     ,XPARAM)  
+funnoli_in.f-
+funnoli_in.f-*******************************************************************************
+funnoli_in.f-*
+funnoli_in.f-* PURPOSE  Computing the derivatives of non-linear functions with respect to
+--
+funnoli_in.f:*  IVPAR                  Vector containing estimation index for all            
+funnoli_in.f-*                         parameters                                            
+funnoli_in.f-*  NFNLPRG                Generic parameter zone number for every nonlinear
+funnoli_in.f-*                         function
+funnoli_in.f-*  PARACD                 Agreement parameters
+funnoli_in.f-*  PRGC                   Array containing generic parameters (subset of PARC)
+--
+funnoli_in.f:     ;         ,IFLAGS(NFLAGS)    ,PARACD(3,NFNL)     ,IVPAR(NZPAR)
+funnoli_in.f-     ;         ,IPOS(12)          ,DERIV(12)
+funnoli_in.f-
+funnoli_in.f-      IF(IFLAGS(3).NE.0) CALL IO_SUB('FUNNOLI_IN',0)
+funnoli_in.f-
+funnoli_in.f-
+--
+funnoli_in.f:        IPOS(IC1)=IVPAR(IND1)   ! IND1 is the zonal parameter zone number
+funnoli_in.f-
+funnoli_in.f-        IF (IPOS(IC1).NE.0) THEN
+funnoli_in.f-
+funnoli_in.f-          IF (X.GE.(XBASE+DELTA)) THEN    ! Linear zone (right)
+funnoli_in.f-
+--
+funnoli_in.f:        IPOS(IC1)=IVPAR(IND1)   ! IND1 is the zonal parameter zone number
+funnoli_in.f-
+funnoli_in.f-        IF (IPOS(IC1).NE.0) THEN
+funnoli_in.f-
+funnoli_in.f-          IF (X1.GT.DELTA)THEN             ! Linear zone (right)
+funnoli_in.f-   
+--
+funnoli_in.f:        IPOS(IC1)=IVPAR(INPRGC+NFNLPRG(1,NFNLPARAM))
+funnoli_in.f-        IF (IPOS(IC1).NE.0) THEN
+funnoli_in.f-
+funnoli_in.f-          IF (X1.GT.DELTA)THEN              ! Linear zone (right)
+funnoli_in.f-
+funnoli_in.f-            DERYDERB=0D0
+--
+funnoli_in.f:        IPOS(IC1)=IVPAR(IND1)   ! IND1 is the zonal parameter zone number
+funnoli_in.f-
+funnoli_in.f-        IF (IPOS(IC1).NE.0) THEN
+funnoli_in.f-
+funnoli_in.f-          IF (X.GE.0D0)THEN                       
+funnoli_in.f-
+--
+funnoli_in.f:        IPOS(IC1)=IVPAR(INPRGC+NFNLPRG(1,NFNLPARAM))
+funnoli_in.f-        IF (IPOS(IC1).NE.0) THEN
+funnoli_in.f-
+funnoli_in.f-          IF (X.LT.0D0) THEN       ! Non-linear function 
+funnoli_in.f-
+funnoli_in.f-            U=1D0+RELSUC**(1D0/(1D0-XLAMBDA))       ! Sat. degree base (aux)
+--
+funnoli_in.f:        IPOS(IC1)=IVPAR(INPRGC+NFNLPRG(2,NFNLPARAM))
+funnoli_in.f-        IF (IPOS(IC1).NE.0) THEN
+funnoli_in.f-          DERIV(IC1)=0.D0        
+funnoli_in.f-          IC1=IC1+1
+funnoli_in.f-        END IF
+funnoli_in.f-
+--
+funnoli_in.f:        IPOS(IC1)=IVPAR(INPRGC+NFNLPRG(3,NFNLPARAM))
+funnoli_in.f-        IF (IPOS(IC1).NE.0) THEN
+funnoli_in.f-          DERIV(IC1)=0.D0
+funnoli_in.f-          IC1=IC1+1
+funnoli_in.f-        END IF
+funnoli_in.f-
+--
+funnoli_in.f:        IPOS(IC1)=IVPAR(INPRGC+NFNLPRG(4,NFNLPARAM))
+funnoli_in.f-        IF (IPOS(IC1).NE.0) THEN
+funnoli_in.f-
+funnoli_in.f-          DMUDH=(RELSUC/PCAP)*(XLAMBDA/(1.D0-XLAMBDA))*
+funnoli_in.f-     ;           RELSUC**(XLAMBDA/(1D0-XLAMBDA))*
+funnoli_in.f-     ;           (1.D0+RELSUC**(1.D0/(1D0-XLAMBDA)))**(-XLAMBDA-1.D0)
+--
+funnoli_in.f:        IPOS(IC1)=IVPAR(IND1)   ! IND1 is the zonal parameter zone number
+funnoli_in.f-
+funnoli_in.f-        IF (IPOS(IC1).NE.0) THEN
+funnoli_in.f-          
+funnoli_in.f-          IF (X.GE.(XBASE+DELTA)) THEN    
+funnoli_in.f-
+--
+funnoli_in.f:        IPOS(IC1)=IVPAR(IND1)   ! IND1 is the zonal parameter zone number
+funnoli_in.f-
+funnoli_in.f-        IF (IPOS(IC1).NE.0) THEN
+funnoli_in.f-
+funnoli_in.f-C______________________________Computations for saturated state
+funnoli_in.f-
+--
+funnoli_in.f:        IPOS(IC1)=IVPAR(INPRGC+NFNLPRG(1,NFNLPARAM))
+funnoli_in.f-        IF (IPOS(IC1).NE.0) THEN
+funnoli_in.f-
+funnoli_in.f-          IF (X.LT.0.D0) THEN
+funnoli_in.f-            U=1D0+RELSUC**(1D0/(1D0-XLAMBDA))       ! Sat. degree base (aux)
+funnoli_in.f-
+--
+funnoli_in.f:        IPOS(IC1)=IVPAR(INPRGC+NFNLPRG(2,NFNLPARAM))
+funnoli_in.f-        IF (IPOS(IC1).NE.0) THEN
+funnoli_in.f-
+funnoli_in.f-          DERSWDERSMIN=1.D0-XMU
+funnoli_in.f-          U=RELSUC**(1D0/(1D0-XLAMBDA))
+funnoli_in.f-          DERSMIN=XLAMBDA/(1D0-XLAMBDA) *(1D0+U)**(-1D0*XLAMBDA-1D0)
+--
+funnoli_in.f:        IPOS(IC1)=IVPAR(INPRGC+NFNLPRG(3,NFNLPARAM))
+funnoli_in.f-        IF (IPOS(IC1).NE.0) THEN
+funnoli_in.f-
+funnoli_in.f-          DERSWDERSMAX=XMU
+funnoli_in.f-          U=RELSUC**(1D0/(1D0-XLAMBDA))
+funnoli_in.f-
+--
+funnoli_in.f:        IPOS(IC1)=IVPAR(INPRGC+NFNLPRG(4,NFNLPARAM))
+funnoli_in.f-        IF (IPOS(IC1).NE.0) THEN
+funnoli_in.f-
+funnoli_in.f-          DMUDH=(RELSUC/PCAP)*(XLAMBDA/(1.D0-XLAMBDA))*
+funnoli_in.f-     ;           RELSUC**(XLAMBDA/(1D0-XLAMBDA))*
+funnoli_in.f-     ;           (1.D0+RELSUC**(1.D0/(1D0-XLAMBDA)))**(-XLAMBDA-1.D0)
+--
+funnoli_in.f:        IPOS(IC1)=IVPAR(IND2)         ! IND2 indicates the number of the porosity zone
+funnoli_in.f-        IF(IPOS(IC1).NE.0) THEN       ! Computation of the first derivative of sat. degree
+funnoli_in.f-                                      ! with respect to cap. pressure
+funnoli_in.f-
+funnoli_in.f-          IF (X.GE.0D0)THEN
+funnoli_in.f-
+--
+derdsl.f:     &      ,FNT      ,IFLAGS   ,INORPAR  ,IVPAR    ,KXX      ,LDIM
+derdsl.f-     &      ,LNNDEL   ,LXPAREL  ,NFNLPAR  ,NFNLPRG  ,NFNLTIP  ,NFTPAR
+derdsl.f-     &      ,NZONE_PAR,PARACD   ,PARC     ,QXYZ     ,IDIMWGT  ,WGT_PAR
+derdsl.f-     &      ,IPNT_PAR ,IPOS     ,DERIV)
+derdsl.f-
+derdsl.f-******************************************************************************
+--
+derdsl.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+derdsl.f:*  IVPAR                  Vector containing estimation index for all            
+derdsl.f-*                         parameters                                            
+derdsl.f-*  KXX                    Node numbers of every element (counterclockwise       
+derdsl.f-*                         order).                                               
+derdsl.f-*  LDIM                   Vector containing the dimension of each element       
+derdsl.f-*  LNNDEL                 Number of nodes at every element                      
+--
+derdsl.f:      INTEGER*4::IFLAGS(NFLAGS)       ,INORPAR(NTYPAR),IVPAR(NZPAR)
+derdsl.f-     &          ,KXX(LMXNDL,NUMEL)    ,LDIM(NUMEL)    ,LNNDEL(NUMEL)
+derdsl.f-     &          ,LXPAREL(NUMEL,NPAREL),NFNLPAR(NZPAR) ,NFNLPRG(8,NFNL)
+derdsl.f-     &          ,NFNLTIP(NFNL)        ,NFTPAR(NZPAR)  ,NZONE_PAR(NTYPAR)
+derdsl.f-
+derdsl.f-      REAL*8 BIBI(IDIMBB,NUMEL)        ,CAUX1(NUMNP)
+--
+derdsl.f:          IP = IVPAR(JJ)
+derdsl.f-
+derdsl.f-          IF (IP.NE.0 .OR. IOTRLI.NE.0) THEN
+derdsl.f-
+derdsl.f-              NNUD = LNNDEL(L)
+derdsl.f-              LD = LDIM(L)
+--
+derdsl.f:     &    ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG
+derdsl.f-     &    ,PARACD   ,PARC(INORPAR(19)+1),CCAL     ,CCALAN   ,XPARAM
+derdsl.f-     ;    ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+derdsl.f-
+derdsl.f-              IF (NPTOT.GT.0) THEN
+derdsl.f-
+--
+state_variable_init.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+state_variable_init.f-*  INTI                   Observation time number such that the current         
+state_variable_init.f-*                         computation time lies in between observation time     
+state_variable_init.f-*                         number INTI and observation time number INTI+1        
+state_variable_init.f-*  IOPINIT                Scalar. It is equal to IOPINITH or to IOPINITC
+state_variable_init.f-*  IXPARNP                Array containing zone number of each node j,          
+--
+derpor.f:     &          ,IOVRWC   ,ITPTVAR  ,IVPAR    ,KXX      ,LDIM
+derpor.f-     &          ,LMXNDL   ,LNNDEL   ,LXPAREL  ,NFLAGS   ,NFNL
+derpor.f-     &          ,NFNLPAR  ,NFNLPRG  ,NFNLTIP  ,NFTPAR   ,NINT
+derpor.f-     &          ,NPAR     ,NPAREL   ,NPPEL    ,NTYPAR   ,NUMEL
+derpor.f-     &          ,NUMNP    ,NZONE_PAR,NZPAR    ,PARACD   ,PARC
+derpor.f-     &          ,PAREL    ,THETAT   ,WSPECHEAT,WTHERMCON,IDIMWGT
+--
+derpor.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+derpor.f:*  IVPAR                  Vector containing estimation index for all            
+derpor.f-*                         parameters                                            
+derpor.f-*  KXX                    Node numbers of every element (counterclockwise       
+derpor.f-*                         order).                                               
+derpor.f-*  LDIM                   Vector containing the dimension of each element       
+derpor.f-*  LNNDEL                 Number of nodes at every element                      
+--
+derpor.f:      INTEGER*4::IFLAGS(NFLAGS)       ,INORPAR(NTYPAR),IVPAR(NZPAR)
+derpor.f-     &          ,KXX(LMXNDL,NUMEL)    ,LDIM(NUMEL)    ,LNNDEL(NUMEL)
+derpor.f-     &          ,LXPAREL(NUMEL,NPAREL),NFNLPAR(NZPAR) ,NFNLPRG(8,NFNL)
+derpor.f-     &          ,NFNLTIP(NFNL)        ,NFTPAR(NZPAR)  ,NZONE_PAR(NTYPAR)
+derpor.f-
+derpor.f-
+--
+derpor.f:          IP = IVPAR(JJ)
+derpor.f-
+derpor.f-          IF (IP.GT.0 .OR. IOTRLI.NE.0) THEN
+derpor.f-
+derpor.f-              IF (IOTRLI.NE.0) THEN
+derpor.f-                  NCNF = NFNLPAR(JJ)
+--
+derpor.f:     &    ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG
+derpor.f-     &    ,PARACD   ,PARC(INORPAR(19)+1),CCALIT   ,CCALAN   ,XPARAM
+derpor.f-     ;    ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+derpor.f-
+derpor.f-              IF (NPTOT.GT.0) THEN
+derpor.f-
+--
+derarr.f:     &          ,IOFLLI   ,IOFMLF   ,IVPAR    ,KXX      ,LMXNDL
+derarr.f-     &          ,LNNDEL   ,LXPAREL  ,NFLAGS   ,NFNL     ,NFNLPAR
+derarr.f-     &          ,NFNLPRG  ,NFNLTIP  ,NFTPAR   ,NINT     ,NPAREL
+derarr.f-     &          ,NPARF    ,NPPEL    ,NTYPAR   ,NUMEL    ,NUMNP
+derarr.f-     &          ,NZONE_PAR,NZPAR    ,PARACD   ,PARC     ,PAREL
+derarr.f-     &          ,IDIMWGT  ,WGT_PAR  ,IPNT_PAR ,NPAR     ,IPOS
+--
+derarr.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+derarr.f:*  IVPAR                  Vector containing estimation index for all            
+derarr.f-*                         parameters                                            
+derarr.f-*  KXX                    Node numbers of every element (counterclockwise       
+derarr.f-*                         order).                                               
+derarr.f-*  LNNDEL                 Number of nodes at every element                      
+derarr.f-*  LXPAREL                Array containing zone numbers for a given             
+--
+derarr.f:     &          ,IVPAR(NZPAR),KXX(LMXNDL,NUMEL),LNNDEL(NUMEL)
+derarr.f-     &          ,LXPAREL(NUMEL,NPAREL),NFNLPAR(NZPAR),NFNLPRG(8,NFNL)
+derarr.f-     &          ,NFNLTIP(NFNL),NFTPAR(NZPAR),NZONE_PAR(NTYPAR)
+derarr.f-
+derarr.f-      REAL*8::AREA(NUMEL),CFPAREL(NUMEL,NPAREL)
+derarr.f-     &       ,DERH(NUMNP,NPARF,IDIMDERH),FNT(IDIMFNT,NINT)
+--
+derarr.f:              IP = IVPAR(INORPAR(8)+IZON)
+derarr.f-
+derarr.f-              IF (IP.GT.0 .OR. IOFLLI.NE.0) THEN
+derarr.f-
+derarr.f-C------------------------- Computes derivatives
+derarr.f-
+--
+derarr.f:     & ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG
+derarr.f-     & ,PARACD   ,PARC(INORPAR(19)+1),HCALIT   ,HCALAN   ,XPARAM
+derarr.f-     ; ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+derarr.f-
+derarr.f-                  IF (NPTOT.NE.0) THEN
+derarr.f-
+--
+check_cons.f:     ;(MAINF,NTYPAR,NZPAR,INORPAR2,IVPAR,STAT,TYPENAME)
+check_cons.f-
+check_cons.f-********************************************************************************
+check_cons.f-*
+check_cons.f-* PURPOSE
+check_cons.f-*
+--
+check_cons.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+check_cons.f:*  IVPAR                  Vector containing estimation index for all            
+check_cons.f-*                         parameters                                            
+check_cons.f-*  STAT                   Contains statistical parameters and properties
+check_cons.f-*                         for all parameter types and for all observation types. 
+check_cons.f-*  TYPENAME               Array containing  the names of the state var. and 
+check_cons.f-*                         parameter types in the same order as OBSCLASS and STAT
+--
+check_cons.f:      INTEGER*4 INORPAR2(NTYPAR+1), IVPAR(NZPAR) 
+check_cons.f-      REAL*8 STAT(40,11)
+check_cons.f-      CHARACTER*10 TYPENAME(40)
+check_cons.f-      
+check_cons.f-      INTEGER*4 I,J,NOF,NOL
+check_cons.f-      LOGICAL ESTIMPAR
+--
+check_cons.f:C____________________________________________ Check consistency lambda and ivpar
+check_cons.f-
+check_cons.f-      DO I =1, NTYPAR
+check_cons.f-
+check_cons.f-         NOF = INORPAR2(I)+1
+check_cons.f-         NOL = INORPAR2(I+1)
+--
+check_cons.f:            IF (IVPAR(J).GT. 0) ESTIMPAR = .TRUE.
+check_cons.f-         ENDDO
+check_cons.f-
+check_cons.f-         IF (ESTIMPAR .AND. STAT(I+10,2) .EQ. 0.D0)
+check_cons.f-     ;      WRITE(MAINF,100) TYPENAME(I+10)
+check_cons.f-
+--
+residuals.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR 
+residuals.f-*  IODEVICE               Column 1: Data type                                   
+residuals.f-*                         Column 2: Status for calc. of obs.                    
+residuals.f-*                         Column 3: Method of spat. integr.                     
+residuals.f-*                         Column 4: Method of temp. integr.                     
+residuals.f-*                         Column 5: Number of integr. time                      
+--
+derpor_flu.f:     &          ,IOVRWC   ,IVPAR    ,KXX      ,LMXNDL   ,LNNDEL
+derpor_flu.f-     &          ,LXPAREL  ,NFLAGS   ,NFNL     ,NFNLPAR  ,NFNLPRG
+derpor_flu.f-     &          ,NFNLTIP  ,NFTPAR   ,NINT     ,NPAR     ,NPAREL
+derpor_flu.f-     &          ,NTYPAR   ,NUMEL    ,NUMNP    ,NZONE_PAR,NZPAR
+derpor_flu.f-     &          ,PARACD   ,PARC     ,IDIMWGT  ,WGT_PAR  ,IPNT_PAR
+derpor_flu.f-     &          ,IPOS     ,DERIV)
+--
+derpor_flu.f:      INTEGER*4::IFLAGS(NFLAGS)   ,INORPAR(NTYPAR)  ,IVPAR(NZPAR)
+derpor_flu.f-     &          ,KXX(LMXNDL,NUMEL),LNNDEL(NUMEL)  ,LXPAREL(NUMEL,NPAREL)
+derpor_flu.f-     &          ,NFNLPAR(NZPAR)   ,NFNLPRG(8,NFNL)  ,NFNLTIP(NFNL)
+derpor_flu.f-     &          ,NFTPAR(NZPAR)    ,NZONE_PAR(NTYPAR) ,IDIMWGT  
+derpor_flu.f-
+derpor_flu.f-
+--
+derpor_flu.f:          IP = IVPAR(JJ)
+derpor_flu.f-
+derpor_flu.f-
+derpor_flu.f-          IF (IP.GT.0 .OR. IOTRLI.NE.0) THEN
+derpor_flu.f-
+derpor_flu.f-              NNUD = LNNDEL(L)
+--
+derpor_flu.f:     &    ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG
+derpor_flu.f-     &    ,PARACD   ,PARC(INORPAR(19)+1),CCALIT   ,CCALAN   ,XPARAM
+derpor_flu.f-     ;    ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+derpor_flu.f-
+derpor_flu.f-              IF (NPTOT.GT.0) THEN
+derpor_flu.f-
+--
+geo_calc.f:     ;,IVPAR          ,IZN_NPP_GS    ,IZN_PP_GS       ,KRIGAUX_GS      
+geo_calc.f-     ;,KRISOL_GS      ,KRISYS_GS     ,KXX             ,LDIM_GS         
+geo_calc.f-     ;,NUMSB_GS       ,NZONE_PAR     ,PAR_WGT         ,PARC            
+geo_calc.f-     ;,PARM           ,PARZ          ,POSDIS_GS       ,POSDISAUX_GS    
+geo_calc.f-     ;,POSMEAS_GS     ,POSZN_GS      ,ROTMAT_GS       ,SEARCH_GS       
+geo_calc.f-     ;,SUPBL_GS       ,TRIM_GS       ,VARIO_GS        ,VMEAS_GS        
+--
+geo_calc.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+geo_calc.f-*  IO_KG_GS               Kriging dimensions and options for geost. inv. prob. 
+geo_calc.f-*                         Each row contains information of a given group of zones 
+geo_calc.f-*                         Only sense if group is estimated geost. On each row:
+geo_calc.f-*                         - Column 1: Kriging/Cokriging type
+geo_calc.f-*                                     0: Simple kriging
+--
+geo_calc.f:*  IVPAR                  Vector containing estimation index for all            
+geo_calc.f-*                         parameters  
+geo_calc.f-*  IZN_NPP_GS             Used to store the number of pilot points used to param.
+geo_calc.f-*                         a zonal value
+geo_calc.f-*  IZN_PP_GS              Used to store which pilot points are used to param. a zonal 
+geo_calc.f-*                         value
+--
+geo_calc.f:     ;         ,IVPAR(NZPAR,4),INORPAR(NTYPAR),KXX(LMXNDL,NUMEL)
+geo_calc.f-     ;         ,LTYPE(NUMEL),LXPAREL(NUMEL,NPAREL),IOWRITE(NWRITE)
+geo_calc.f-     ;         ,LNNDEL(NUMEL),IPNT_PAR(NZPAR*IDIMWGT),NZONE_PAR(NTYPAR)
+geo_calc.f-     ;         ,ICHECK_GS(MXNPP_GS),ICROSSCOV_GS(MXNPRIM_GS,MXZONPP_GS)
+geo_calc.f-     ;         ,INDPAR(NPAR),IOLG_PAR(NTYPAR),IPOLDRIFT_GS(9,NGROUP_ZN)
+geo_calc.f-     ;         ,ISUPBL_GS(MXSB_GS*8,3),IZN_NPP_GS(MXNZON_GS)
+--
+geo_calc.f:     ;,IFLAGS            ,IVPAR(1,3)  ,INORPAR           ,KXX          
+geo_calc.f-     ;,LTYPE             ,LXPAREL     ,POSMEAS_GS(1,1,1,IGR))
+geo_calc.f-
+geo_calc.f-
+geo_calc.f-            CALL ASS_EXT_DRIFT
+geo_calc.f-     ;(IOPT_GS(1,IGR)    ,2          ,IDIMVAR_GS         ,IERROR
+--
+geo_calc.f:     ;,IVPAR(1,3)        ,INORPAR    ,KXX
+geo_calc.f-     ;,LNNDEL            ,LTYPE      ,LXPAREL    ,POSMEAS_GS(1,1,1,IGR)
+geo_calc.f-     ;,POSZN_GS(1,1,IGR) ,VMEAS_GS(1,1,1,IGR))            
+geo_calc.f-*     ;,IZONMEAS_GS(1,1))
+geo_calc.f-
+geo_calc.f-            DO IPIPO=1,IOPT_GS(IGR,5)
+--
+geo_calc.f:            IGROUP=IVPAR(IZPAR,3)
+geo_calc.f-            IF (IGROUP .LE. 0) CYCLE
+geo_calc.f-            IF (IGROUP.LE.NGROUP_ZN .AND. IOPT_GS(IGROUP,1).EQ.1) THEN
+geo_calc.f-                   
+geo_calc.f-               IFIRSTPOS=(IZPAR-1)*IDIMWGT+1
+geo_calc.f-               IF (IOPT_GS(IGROUP,6).NE.0) THEN   ! Variable pilot points
+--
+geo_calc.f:     ;,ICHECK_GS       ,ICROSSCOV_GS     ,IFLAGS         ,IVPAR(1,3)  
+geo_calc.f-     ;,INDPAR          ,INORPAR          ,IO_KG_GS       ,IOLG_PAR       
+geo_calc.f:     ;,IOPT_GS         ,IVPAR(1,2)       ,IPNT_PAR       ,IVPAR(1,1)     
+geo_calc.f-     ;,IPOLDRIFT_GS    ,ISOZ             ,ISUPBL_GS      ,IVARIO_GS      
+geo_calc.f-     ;,IZN_NPP_GS      ,IZN_PP_GS        ,KRIGAUX_GS     ,KRISOL_GS      
+geo_calc.f-     ;,KRISYS_GS       ,LDIM_GS          ,NUMSB_GS       ,NZONE_PAR      
+geo_calc.f-     ;,PAR_WGT         ,PARC             ,PARM           ,PARZ           
+geo_calc.f-     ;,POSDIS_GS       ,POSDISAUX_GS     ,POSMEAS_GS     ,POSZN_GS       
+--
+geo_calc.f:     ;,IOPT_GS  ,ISOZ      ,IVPAR     ,LDIM_GS ,PARZ)
+geo_calc.f-
+geo_calc.f-C_______________________ Step 6: Echoes complete array PARZ (GSLIB format)
+geo_calc.f-C_______________________         and PARC
+geo_calc.f-
+geo_calc.f-         IF (IFLAGS(23).LT.0) THEN
+--
+derq_stg.f:     &          ,IOFLLI   ,IOFMLF   ,IOVRWC   ,IVPAR    ,KXX
+derq_stg.f-     &          ,LMXNDL   ,LNNDEL   ,LTYPE    ,LXSTG    ,NFLAGS
+derq_stg.f-     &          ,NFNL     ,NFNLPAR  ,NFNLPRG  ,NFNLTIP  ,NFTPAR
+derq_stg.f-     &          ,NINT     ,NPAR     ,NPAREL   ,NPPNP    ,NPZON
+derq_stg.f-     &          ,NTYPAR   ,NUMEL    ,NUMNP    ,NZONE_PAR,NZPAR
+derq_stg.f-     &          ,PARACD   ,PARC     ,PARNP    ,IDIMWGT  ,WGT_PAR
+--
+derq_stg.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR                       
+derq_stg.f:*  IVPAR                  Vector containing estimation index for all            
+derq_stg.f-*                         parameters                                            
+derq_stg.f-*  KXX                    Node numbers of every element (counterclockwise       
+derq_stg.f-*                         order).                                               
+derq_stg.f-*  LNNDEL                 Number of nodes at every element                      
+derq_stg.f-*  LTYPE                  Vector containing the type of each element            
+--
+derq_stg.f:     &          ,INORPAR(NTYPAR),IVPAR(NZPAR)     ,KXX(LMXNDL,NUMEL)
+derq_stg.f-     &          ,LNNDEL(NUMEL)  ,LTYPE(NUMEL)     ,LXSTG(NUMEL)
+derq_stg.f-     &          ,NFNLPAR(NZPAR) ,NFNLTIP(NFNL)    ,NFNLPRG(8,NFNL)
+derq_stg.f-     &          ,NFTPAR(NZPAR)  ,NZONE_PAR(NTYPAR)  ,IPNT_PAR
+derq_stg.f-
+derq_stg.f-      REAL*8::AREA(NUMEL)               ,CAUDAL(NUMNP)
+--
+derq_stg.f:          IP = IVPAR(JJ)
+derq_stg.f-
+derq_stg.f-          IF (IP.NE.0 .OR. IOFLLI.NE.0) THEN
+derq_stg.f-
+derq_stg.f-C------------------------- Derivatives of storage
+derq_stg.f-
+--
+derq_stg.f:     & ,IFLAGS   ,INDEX    ,IPOS     ,IVPAR    ,KXX      ,NFNLPRG  
+derq_stg.f-     & ,PARACD   ,PARC(INORPAR(19)+1),HCALIT   ,HCALAN   ,XPARAM
+derq_stg.f-     ; ,IDIMWGT  ,NPAR     ,IPNT_PAR ,WGT_PAR)
+derq_stg.f-
+derq_stg.f-
+derq_stg.f-              IF (NPTOT.GT.0) THEN
+--
+comp_btra.f:*                         IVPAR, NFTPAR, STPAR and FNTPAR
+comp_btra.f-*  IPAR_DIR               Array containing all integer direct problem           
+comp_btra.f-*                         parameters                                            
+comp_btra.f-*  KXX                    Node numbers of every element (counterclockwise       
+comp_btra.f-*                         order).                                               
+comp_btra.f-*  LINMET                   Linearization method

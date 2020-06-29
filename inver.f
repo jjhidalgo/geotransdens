@@ -641,7 +641,7 @@ C------------------------- parameter type I is estimated, otherwise zero
 
           IF (IOINV.GT.0) THEN
              IPOSIC=1
-             DO J=1,18
+             DO J=1,19
                 IOLG_PAR(J,2)=0
                 IF (J.EQ.1 .AND. NZONE_PAR(1).NE.0) THEN
                    DO I=1,MAX (ISOT,IODIM)*NZONE_PAR(1)

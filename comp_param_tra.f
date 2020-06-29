@@ -527,8 +527,8 @@ C-------------------------  Assigns derivative
 
           END IF !IOTRLI.NE.0
 
-          
-C------------------------- External concentration (elements)
+
+C------------------------- Formation Factor (elements)
 
           IF (NZONE_PAR(19).NE.0) THEN
 

@@ -513,9 +513,10 @@ C------------------------- PARC, STPAR, etc
 
       IF (IOEQT.NE.2) THEN        ! Only flow or flow plus transport
           NZPAR = NZTRA*MAX(ISOT,IODIM)+NZSTG+NZARR+NZCHP+NZQQP+NZALF+
-     ;          NZPRG+NZCLK+NZFOF
+     ;          NZPRG
           IF (IOEQT.EQ.3) THEN
-              NZPAR= NZPAR+2*NZDSP+NZPOR+NZDFM+NZCRD+NZFOD+NZCOE
+             NZPAR = NZPAR+2*NZDSP+NZPOR+NZDFM+NZCRD+NZFOD+NZCOE
+     &             + NZCLK+NZFOF
           ELSE
 
 C------------------------- Porosity has to be explicitly added when no 

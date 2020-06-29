@@ -22,6 +22,11 @@
 *                         at last time step 
 *  VCAL                   Array containing computed state variable values at 
 *                         the current time step 
+*  IVPAR                  Array containing estimation indexes
+*                           - Column 1: First useful position at IPNT_PAR
+*                           - Column 2: Last useful position at IPNT_PAR
+*                           - Column 3: Group of zones
+*                           - Column 4: Type of parameter
 *  KXX                    Node numbers of every element (counterclockwise 
 *                         order) 
 *  IPOS                   Location order of the estimated parameter 

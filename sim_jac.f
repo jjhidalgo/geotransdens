@@ -1314,7 +1314,7 @@ C------------------------- IPBTP is the number of the current transport problem
                             ENDIF
                             IPBFL=ISOLEQ(MAX(1,INTI),3)
 
-	                    IF (IFLAGS(25).GT.0) THEN  
+                            IF (IFLAGS(25).GT.0) THEN  
                                           
                                 WRITE (746,*)
      &                               'ITERACION ',NUMITER, ' INTI ',INTI
@@ -1477,13 +1477,14 @@ C------------------------- Writes mesh for ERT if not already done.
 
                            CLOSE(123)
                            END IF  !No HYDDROMESH.vtk
-
-                         CALL  COMP_OBS_GEO
+  
+                           CALL  COMP_OBS_GEO 
      ;     (CCALIT   ,ACTH     ,CFPAREL  ,DERC     ,DVOBS    ,IDIMDERC
-     ;     ,IFLAGS   ,INEWT    ,INORPAR  ,IODEVICE ,IOINV    ,IOPTS(29)
-     ;     ,IPBTP    ,LXPAREL  ,NDEVGEO  ,NDEVS    ,NFLAGS   ,NOOBSIT
-     ;     ,NPAR     ,NPAREL   ,NPBMX    ,NPBTP    ,NTYPAR   ,NUMEL
-     ;     ,NUMNP    ,NUMTIT   ,NUMTOBS  ,NZPAR    ,PARZ     ,TABSOLUT
+     ;     ,IDIMWGT  ,IPNT_PAR ,IOLG_PAR ,IFLAGS   ,INEWT    ,INORPAR
+     ;     ,IODEVICE ,IOINV    ,IOPTS(29),IPBTP    ,IVPAR    ,LXPAREL  
+     ;     ,NDEVGEO  ,NDEVS    ,NFLAGS   ,NOOBSIT  ,NPAR     ,NPAREL
+     ;     ,NPBMX    ,NPBTP    ,NTYPAR   ,NUMEL    ,NUMNP    ,NUMTIT
+     ;     ,NUMTOBS  ,NZONE_PAR(19)      ,NZPAR    ,PARZ     ,TABSOLUT
      ;     ,TIT      ,VJAC     ,VOBSC)
                       END IF !NDEVGEO.GT.0
                       
