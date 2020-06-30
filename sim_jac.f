@@ -55,7 +55,8 @@
      &,VISCOSITY ,VISCREF   ,VJAC        ,VOBSC    ,WATVOL  ,WORK
      &,WTOBSN    ,WTOBST    ,XNORVD,DVDP,IOLG_PAR,IOCTRA,HINI,WSPECHEAT
      &,WTHERMCON
-     ;,IDIMWGT   ,WGT_PAR  ,IPNT_PAR,IPOS     ,DERIV, NDEVGEO)
+     ;,IDIMWGT   ,WGT_PAR  ,IPNT_PAR,IPOS     ,DERIV
+     &,NDEVGEO   ,PARNAME)
 
 ********************************************************************************
 *
@@ -308,6 +309,7 @@
      &       ,BM_ND_FL(NUMNP,8,2)     ,BM_ND_TT(NUMNP,12,2)
 
       CHARACTER*20::FILENAME
+      CHARACTER::PARNAME(NPAR)*4
 
       INTEGER*4 IREDTIMGL,NUMDIVCGL,NUMDIVHGL,NCONVIFL
      &     ,ISYMETRIC,ND,NFL_SIM,NTP_SIM,I_REC,INCLK,IORECATRA,IOFIRST
@@ -321,7 +323,7 @@ C------------------------- subroutine is written in the main unit.
       IF (IFLAGS(3).EQ.1) CALL IO_SUB('SIM_JAC',0)
 
        MAINF=25       ! Esto es necesario para evitar conflictos con pasar como 
-                      ! argumento MAINF y en el COMMON _DMT. Se puede arreglar mas 
+                      ! argumento MAINF y en el COMMON _DMT Se puede arreglar mas 
                       ! finamente pero requiere mas toqueteos. Como MAINF no cambia de 
                       ! valor tampoco tiene mayor importancia
 
@@ -1036,7 +1038,7 @@ C------------------------- problems loop is interrupted. There
    61                             FORMAT
      &                            (/,'The first non-linear transport '
      &                              ,'has converged.',/
-     &                              ,'Simultaneus transport loop'
+     &                              ,'Simultaneous transport loop'
      &                              ,' continues',/)
 
                               END IF !IREDTIMGL.EQ.1 .OR. IOCONVGL.EQ.0
@@ -1108,22 +1110,21 @@ C_________________________¿¿since it might have change due to time reduction??
 
 C-------------------------Write velocities.
 
+          IF (IOBMCMP.EQ.1 .AND. IOWRITE(16).NE.0 .AND.
+     &        INDENDDT.EQ.1 .AND.
+     &        INTI.NE.0 .AND. IOEQT.NE.0 .AND.
+     &        (MOD(INTI,IOWRITE(16)).EQ.0 .OR. INTI.EQ.1 .OR.
+     &         INTI.EQ.NINT)) THEN
 
-                  IF (IOBMCMP.EQ.1 .AND. IOWRITE(16).NE.0 .AND.
-     &                INDENDDT.EQ.1 .AND.
-     &                INTI.NE.0 .AND. IOEQT.NE.0 .AND.
-     &                (MOD(INTI,IOWRITE(16)).EQ.0 .OR. INTI.EQ.1 .OR.
-     &                INTI.EQ.NINT)) THEN
+              CALL WRITE_VELOCITY_VMSH
+     &                (FILENAME ,INTI     ,IODIM    ,IOFIRST  ,KXX
+     &                ,LMXNDL   ,LNNDEL   ,NINT     ,NUMEL    ,NUMNP
+     &                ,TIME     ,VD       ,COORD(1,1)
+     &                ,COORD(1,2))
 
-                      CALL WRITE_VELOCITY_VMSH
-     &                    (FILENAME ,INTI     ,IODIM    ,IOFIRST  ,KXX
-     &                    ,LMXNDL   ,LNNDEL   ,NINT     ,NUMEL    ,NUMNP
-     &                    ,TIME     ,VD       ,COORD(1,1)
-     &                    ,COORD(1,2))
+              IOFIRST = 1
 
-                      IOFIRST = 1
-
-                  END IF !INTI.NE.0 .AND. IOEQT.NE.1...
+          END IF !INTI.NE.0 .AND. IOEQT.NE.1...
 
 C---------------------------------------------
 C---------------------------------------------
@@ -1394,7 +1395,8 @@ C------------------------- Coupled flow and transport inverse problem
      &                 ,IDIMWORK,IFLAGS    ,INEW     ,INEWT    ,INTI
      &                 ,IODIRECT,IPAR_DIR  ,ITERM    ,MAINF    ,MAXNB
      &                 ,MAXNBF  ,NBAND1    ,NFLAGS   ,NPAR     ,NPARALG
-     &                 ,NUMNP   ,PAR_DIR   ,SOLUTION ,WORK)
+     &                 ,NUMNP   ,PAR_DIR   ,SOLUTION ,WORK     ,PARNAME
+     &                 ,FILENAME)
 
 C------------------------- INEW and IOLD and  INEWT and IOLDT are interchanged.
 
@@ -1452,7 +1454,7 @@ C------------------------- Calculating "observations"
               
                         IPBFL=MAX(1,ISOLEQ(MAX(1,INTI),3)) !FLOW PROBLEM
                         IPBTP=MAX(1,ISOLEQ(MAX(1,INTI),4)) !TRANSPORT PROBLEM
-                      
+
                       CALL COMP_OBS
      ;(81         ,INEW     ,IOINV    ,IOLD     ,IOWRITE(6)
      ;,IOWRITE(5) ,NDEVS    ,NPAR     ,NPARF    ,NPBFL    ,NPBTP    
@@ -1494,14 +1496,13 @@ C-------------------------Updates WATVOL for the new time step
 C-------------------------Only in INT>0 and transport is going to be solved
 C-------------------------(INTI=0 initial WATVOl is needed)
 
+          IF (INTI.GT.0 .AND. IOEQT.GT.1) THEN
+             CALL WATVOL_UPDATE
+     &           (HCALIT ,HCALAN ,IOPTS(31),KXX
+     &           ,LMXNDL ,LNNDEL ,NPBTP  ,NPPEL    ,NUMEL
+     &           ,NUMNP  ,PAREL  ,WATVOL)
 
-                  IF (INTI.GT.0 .AND. IOEQT.GT.1) THEN
-                      CALL WATVOL_UPDATE
-     &                    (HCALIT ,HCALAN ,IOPTS(31),KXX
-     &                    ,LMXNDL ,LNNDEL ,NPBTP  ,NPPEL    ,NUMEL
-     &                    ,NUMNP  ,PAREL  ,WATVOL)
-
-                  END IF !INTI.GT.0 .AND. IOEQT.GT.1
+          END IF !INTI.GT.0 .AND. IOEQT.GT.1
 
 C------------------------ Assign arrays for next time step
 
@@ -1550,7 +1551,7 @@ C------------------------ Assign arrays for next time step
      &                    (CAUX2,NUMNP*MAX(1,IOPTS(29)*NPBTP))
 
                   END IF !IOEQT.NE.1
-                   
+
               END IF !(IOCONVGL.EQ.1)   
           ENDDO  !WHILE (INTI.NE.0 .AND. INDENDDT.EQ.0)
 

@@ -6,7 +6,8 @@
      &          ,IDIMWORK,IFLAGS    ,INEW     ,INEWT    ,INTI
      &          ,IODIRECT,IPAR_DIR  ,ITERM    ,MAINF    ,MAXNB
      &          ,MAXNBF  ,NBAND1    ,NFLAGS   ,NPAR     ,NPARALG
-     &          ,NUMNP   ,PAR_DIR   ,SOLUTION ,WORK)
+     &          ,NUMNP   ,PAR_DIR   ,SOLUTION ,WORK     ,PARNAME
+     &          ,DIMFILE)
 
 ********************************************************************************
 *
@@ -39,17 +40,21 @@ C------------------------- External
      &       ,PAR_DIR(NPARALG)             ,SOLUTION(2*NUMNP)
      &       ,WORK(IDIMWORK)
 
+      CHARACTER::PARNAME(NPAR)*4,DIMFILE*20
+
 C------------------------- Internal
 
-      INTEGER*4::I      ,IPAR   ,J
+      INTEGER*4::I      ,IPAR   ,IROOTLEN,J
+      Character::PSFILE*20
 
-      CHARACTER::strFmt1*20
+      CHARACTER::strFmt1*20, strFmt2*20
 
 C------------------------- First executable statement
 
       strFmt1 = ''
       WRITE (strFmt1,*) NPAR
       strFmt1 = '(I5,'//Trim(AdjustL(strFmt1))//'F15.10)'
+
 
 C-------------------- Writes DERC befor solving
 
@@ -120,5 +125,72 @@ c    1     FORMAT(I5,<NPAR>F15.10)
           END DO !I=1,NUMNP
 
       END IF !IFLAGS(4).GT.0
+
+c-Writes sensitivity to parameters
+      IF (IFLAGS(29).GT.0) THEN
+
+          IF(INTI.EQ.1) THEN
+
+              strFmt1 = ''
+              WRITE (strFmt1,*) NPAR
+              strFmt1 = '(A34,'//Trim(AdjustL(strFmt1))//'(A4,1X))'
+
+	      IROOTLEN=INDEX(DIMFILE,'DIM',BACK=.TRUE.)-1
+
+	      PSFILE = DIMFILE(1:IROOTLEN) //'PSH.OUT'
+	      OPEN(UNIT=555,FILE=PSFILE,STATUS='UNKNOWN')
+
+	      PSFILE= DIMFILE(1:IROOTLEN) //'PSC.OUT'
+              OPEN(UNIT=556,FILE=PSFILE,STATUS='UNKNOWN')
+
+              WRITE(555,strFmt1) 'Sensitivity of HEAD to parameters '
+     &                           ,PARNAME(1:NPAR)
+	      WRITE(556,strFmt1) 'Sensitivity of CONC to parameters '
+     &                           ,PARNAME(1:NPAR)
+	  END IF !INTI.EQ.1
+
+          WRITE(555,20) INTI
+	  WRITE(556,20) INTI
+   20	  FORMAT('TIME STEP: ',I5)
+
+          strFmt1 = ''
+          WRITE (strFmt1,*) NPAR
+          strFmt1 = '('//Trim(AdjustL(strFmt1))//'G15.8)'
+
+          strFmt2 = ''
+          WRITE (strFmt2,*) NPAR
+          strFmt2 = '('//Trim(AdjustL(strFmt2))//'G15.7E3)'
+
+          DO I=1,NUMNP
+
+              IF (ANY(DABS(DERH(I,:,INEW)).LE.1.D-100) .AND. 
+     &                 ANY(DERH(I,:,INEW).NE.0.D0)) THEN
+
+                  WRITE(555,strFmt2) (DERH(I,J,INEW),J=1,NPAR)
+
+              ELSE
+
+                  WRITE(555,strFmt1) (DERH(I,J,INEW),J=1,NPAR)
+
+              END IF
+
+              IF (ANY(DABS(DERC(I,:,INEWT)).LE.1.D-100)  .AND. 
+     &                 ANY(DERC(I,:,INEWT).NE.0.D0)) THEN
+
+                  WRITE(556,strFmt2) (DERC(I,J,INEWT),J=1,NPAR)
+
+              ELSE
+
+                  WRITE(556,strFmt1) (DERC(I,J,INEWT),J=1,NPAR)
+
+              END IF
+
+!   30        FORMAT(<NPAR>G15.8)
+!   31        FORMAT(<NPAR>G15.7E3)
+
+          END DO !I=1,NUMNP
+
+      END IF !IFLAGS(29).GT.0
+
 
       END SUBROUTINE JAC_COUPLED

@@ -94,7 +94,7 @@ def RUN_ERT(concentration, porosity, dc_dp, sim_time):
     sm = pb.DataContainerERT(smFileName)
     fERT = pb.DCSRMultiElectrodeModelling(meshERT, sm)
     RM = fERT.regionManager()
-    RM.region(1).setBackground(True)
+    RM.region(0).setBackground(True)
     rhoa = fERT.response(rhob)
     end_acq = time.time()
     print("Time to create acquisition: " + str(end_acq - start_acq) + " seconds")

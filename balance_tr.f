@@ -490,7 +490,7 @@ C--------------------  Computes (only sense in transient transport) the
 C--------------------  zonal mass balance due to storage capacity
 
           IF (ISOLTR.EQ.2) THEN     ! Transient transport
-              
+
               BM_ZN_TT(NZONEPOR,1) = BM_ZN_TT(NZONEPOR,1) + SUMALM*DTMNT
 
           END IF !ISOLTR.EQ.2

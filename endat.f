@@ -32,7 +32,7 @@
      ;,IOSMFL       ,IOSMTP     ,PARC_GS
      ;!NUEVOS
      ;,IODENS_INI,ITPTVAR,    BETAC,CREF,DENSF,TEMPF,VISCREF,WSPECHEAT
-     &,WTHERMCON)
+     &,WTHERMCON, PARNAME)
 *****************************************************************************
 *
 * PURPOSE
@@ -238,7 +238,7 @@
 
        IMPLICIT REAL*8 (A-H,O-Z)
 
-       CHARACTER FILENAME(20)*20,DEVNAME(NDEVS)*10
+       CHARACTER FILENAME(20)*20,DEVNAME(NDEVS)*10,PARNAME(NPAR)*4
 
        DIMENSION 
      ;  ACTH(NUMEL), BTRA(NUMNP), CAUDAL(NUMNP), CCALIT(NUMNP),
@@ -413,7 +413,7 @@ C------------------------- Reads zone parameters
      ; ,FILENAME  ,INDPAR   ,INORPAR  ,IOLG_PAR ,IOPT_GS   ,IPNT_PAR  
      ; ,ISOZ      ,IVPAR    ,LDIM     ,NFNLPAR  ,NFTPAR    ,NZONE_PAR 
      ; ,PAR_WGT   ,PARC     ,PARM     ,PARZ     ,STPAR     ,WGT_PAR   
-     ; ,NGROUP_ZN ,NPARDET  ,IOINV_GS ,WGT_UNK)    
+     ; ,NGROUP_ZN ,NPARDET  ,IOINV_GS ,WGT_UNK  ,PARNAME)    
 
 
 C------------------------- Reads matrix diffusion zones
@@ -452,7 +452,7 @@ C------------------------- Reads nonlinear parameters and/or gravity direction
           WSPECHEAT = 0D0
           WTHERMCON = 0D0
 
-	  END IF !IODENS_INI.EQ.1 .OR. ITPTVAR.EQ.1
+      END IF !IODENS_INI.EQ.1 .OR. ITPTVAR.EQ.1
 
 C------------------------- Reads time and time functions if a transient 
 C------------------------- problem is solved

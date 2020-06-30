@@ -5,7 +5,7 @@
      ;,NZVAR    ,VAR      ,WEIGHT     ,FILENAME   ,INDPAR     ,IOPTLOG
      ;,IOPT_GS  ,IPNT_END ,IPNT_PAR   ,IPNT_START ,IVVARGRP   ,NFNLVAR
      ;,NFTVAR   ,STVAR    ,VARC       ,VARM       ,VARZ       ,WGT_UNK    
-     ;,WGT_VAR  ,NROW)
+     ;,WGT_VAR  ,NROW     ,PARNAME    ,NAME       ,INAME)
                           
 *****************************************************************************
 *
@@ -141,11 +141,12 @@
      ;       ,VARC(NPAR),WGT_VAR(NZVAR*IDIMWGT),WEIGHT
        REAL*4 ERNUM
                                                             ! Integer internal
-       INTEGER*4 N,NROW,NZ,IVVAR1,NFNLVAR1,NFTVAR1,IGRP1
+       INTEGER*4 N,NROW,NZ,IVVAR1,NFNLVAR1,NFTVAR1,IGRP1,INAME
                                                                ! Real internal
        REAL*8 VARZ1,STVAR1,VARM1
                                                                   ! Characters
-       CHARACTER*20 FILENAME(18),LEEL*100,LEAUX*100,VAR        
+       CHARACTER*20 FILENAME(18),LEEL*100,LEAUX*100,VAR
+     &             ,PARNAME(NPAR)*4 ,NAME*2        
 
 *_______________________ 1) Writes main header
 
@@ -222,7 +223,12 @@
               VARC(IPARDET)=VARZ1
            END IF
            WGT_UNK(IPARDET)=WEIGHT
-           
+
+c----------stores parameter name. Uset to write PSH and PSC.
+           INAME = INAME+1
+           WRITE(PARNAME(INAME),11) NAME,N
+11	   FORMAT(A2,I2)
+
                                ! Checks STVAR value. Echoes a warning if is zero
 
            IF (STVAR1.LE.0.0D0) THEN

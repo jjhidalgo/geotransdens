@@ -5,7 +5,8 @@
      ;,NUMEL     ,NZTRA     ,WEIGHT     ,FILENAME   ,INDPAR     ,INTRAC     
      ;,IOPTLOG   ,IOPT_GS   ,IPNT_END   ,IPNT_PAR   ,IPNT_START ,ISOZ      
      ;,IVTRAGRP  ,LDIM      ,NFNLTRA    ,NFTTRA     ,STTRA      ,TRAC  
-     ;,TRAM      ,TRAZ      ,WGT_TRA    ,WGT_UNK    ,NROW)
+     ;,TRAM      ,TRAZ      ,WGT_TRA    ,WGT_UNK    ,NROW       ,PARNAME
+     &,INAME)
                          
 *****************************************************************************
 * PURPOSE
@@ -111,11 +112,11 @@
      ;       ,WGT_TRA(IZTRAC*IDIMWGT),TRAC(NPAR),WEIGHT
                                                              ! Integer internal
        INTEGER*4 N,NROW,NZ,ISOZ1,IVTRA1,NFNLTRA1,NFTTRA1,IGRP1,IDIM,J,I
-     ;          ,ICOMP
+     ;          ,ICOMP, INAME
                                                                 ! Real internal
        REAL*8 TRAZ1,TRAM1,STTRA1
                                                                    ! Characters
-       CHARACTER FILENAME(18)*20,LEEL*100,LEAUX*100        
+       CHARACTER FILENAME(18)*20,LEEL*100,LEAUX*100,PARNAME(NPAR)*4        
        
 C------------------------- FIRST EXECUTABLE STATEMENT.
 C------------------------- Writes title in MAIN file
@@ -227,6 +228,12 @@ C------------------------- these "read" values will be substituted
                 STTRA(ICOMP)=STTRA1
                 INDPAR(IPARDET)=0
                 IF (IOLGTRA.EQ.1) INDPAR(IPARDET)=IOLGTRA
+
+c------------Stores parameter name. Used to write PSH and PSC.
+                INAME = INAME +1
+                WRITE(PARNAME(INAME),11) 'TX',N
+   11           FORMAT(A2,I2)
+
              END IF
 
           ELSE    ! Anysotropic case
@@ -346,6 +353,15 @@ C------------------------- Sets values of the current tensor component
                   STTRA(ICOMP)=STTRA1
                   INDPAR(IPARDET)=0
                   IF (IOLGTRA.EQ.1) INDPAR(IPARDET)=IOLGTRA
+
+C-----------------Stores parameter name. Used to write PSH and PSC
+                  INAME = INAME +1
+                  IF (I.EQ.2) THEN
+                      WRITE(PARNAME(INAME),11) 'TY',N
+                  ELSE IF(I.EQ.3) THEN
+                      WRITE(PARNAME(INAME),11) 'TY',N
+                  END IF
+
                 END IF
 
                 IF (INPWR.NE.0) WRITE(MAINF,3300)

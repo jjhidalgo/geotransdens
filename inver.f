@@ -78,7 +78,7 @@
      ; ,ESTKRIG_GS,POSDISAUX_GS,POSDIS_GS,EXDRZN_GS,MXZONPP_GS
      ; ,DATASC_GS,IDIMWGT,IPNT_PAR,WGT_PAR,NPARDET,ICHECK_GS,LDIM_GS
      ; ,COORDGR_GS,PARC,WGT_UNK,IPOS,DERIV,PARGOOD,IACTSIMU
-     ; ,PARC_GS,IFLAG_SIMUL,COVPAR_GR)
+     ; ,PARC_GS,IFLAG_SIMUL,COVPAR_GR, PARNAME)
 
 *****************************************************************************
 *
@@ -559,7 +559,8 @@ C     EXTERNAL VARIABLES: ARRAYS
      ;   ,TRIM_GS(8,NGROUP_ZN),WGT_UNK(NPAR)
      ;   ,POSZN_GS(MXNZON_GS,3,NGROUP_ZN),PARGOOD(NZPAR)
      ;   ,PARC_GS(MXNPP_GS,NGROUP_ZN)
-     
+
+       CHARACTER::PARNAME(NPAR)*4 
 
        IF(IFLAGS(3).EQ.1) CALL IO_SUB('INVER',0)
 
@@ -849,7 +850,8 @@ C------------ Number of geophysical observations and FORPY initialization.
      &,VJAC      ,VOBSC     ,WATVOL      ,WORK     ,WTOBSN  ,WTOBST
      &,XNORVD    ,DVDP      ,IOLG_PAR    ,IOCTRA   ,HINI,WSPECHEAT
      &,WTHERMCON
-     ;,IDIMWGT   ,WGT_PAR  ,IPNT_PAR,IPOS     ,DERIV ,NDEVGEO)
+     ;,IDIMWGT   ,WGT_PAR  ,IPNT_PAR,IPOS     ,DERIV
+     &,NDEVGEO, PARNAME)
 
            IF (IFLAGS(4).EQ.1 .AND. NUMITER.EQ.1) CLOSE(69)
 
@@ -1017,7 +1019,8 @@ C_________________________ Initializes array ALFA, containing leakage coeff.
      &,VJAC      ,VOBSC     ,WATVOL      ,WORK     ,WTOBSN  ,WTOBST
      &,XNORVD    ,DVDP      ,IOLG_PAR    ,IOCTRA   ,HINI,WSPECHEAT
      &,WTHERMCON
-     ;,IDIMWGT   ,WGT_PAR  ,IPNT_PAR,IPOS     ,DERIV ,NDEVGEO)
+     ;,IDIMWGT   ,WGT_PAR  ,IPNT_PAR,IPOS     ,DERIV
+     &,NDEVGEO, PARNAME)
        END IF
 
       IF (NDEVGEO.GT.0) THEN

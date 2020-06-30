@@ -130,7 +130,7 @@ C--------------------------- (if needed) are computed according to the
 C--------------------------- anisotropy degree.
 
           DO IS=1,ISMAX
-              TRACT(IS)=PAREL(L,IS) 
+              TRACT(IS)=PAREL(L,IS)
               IF (IS.GT.1. .AND. (ISZ.LT.2.OR.IS.NE.3) ) THEN      
                   IF (IOCALCDEVF.EQ.1) DPARELDH(IS,L)=DPARELDH(IS-1,L)
                   IF (IOCALCDEVT.EQ.1) DPARELDC(IS,L)=DPARELDC(IS-1,L)

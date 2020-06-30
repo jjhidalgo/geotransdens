@@ -113,6 +113,7 @@
      ;                    ,DTPREVINV
      ;!--------------------------------------------- Statistical analysis arrays
      ;,DEVICESTAT ,EIGENVEC ,RESID     ,RESIDPAR
+     ;
      ;!----------------------------------------------------------- String arrays
      ;,DEVNAME
      ;
@@ -261,7 +262,6 @@ C -------------------------------------------------------------------arrays
      ;!--------------------------------------------- Statistical analysis arrays
      ;,DEVICESTAT ,EIGENVEC ,RESID     ,RESIDPAR
 
-
        INTEGER*4
 
      ; IBCOD   ,ISOZ     ,NFTPAR     ,NFNLPAR          
@@ -298,6 +298,8 @@ C -------------------------------------------------------------------arrays
 
       CHARACTER FILENAME(20)*20,DEVNAME(NDEVS)*10
 
+	Character*10,Allocatable::ParName(:)
+
 C     INTERNAL VARIABLES: SCALARS
       INTEGER*4 NROW,iprocess
      &, INTRA,INSTG,INARR,INARRT,INDSP,INDFM ,INPOR ,INFOD,INCRD
@@ -327,6 +329,13 @@ C------------------------- First executable statement
       NPBMX = MAX(NPBFL,NPBTP)
 
       IORDCH = IOPTS(30)
+
+      If(NPAR.GT.0) Then
+          Allocate(ParName(NPAR))
+      Else
+	  Allocate(ParName(1)) !por si...
+       End If
+       ParName(:)=''
 
 c-parche
 C------------------------- This variable is not in the input data.
@@ -378,7 +387,7 @@ C------------------------- Reads all input data
      ;,PAR_WGT          ,IOSMFL     ,IOSMTP  ,PARC_GS
      ;!NUEVOS
      ;,IODENS_INI,ITPTVAR,BETAC,CREF,DENSREF,TEMPREF,VISCREF,WSPECHEAT
-     &,WTHERMCON)
+     &,WTHERMCON, PARNAME)
 
 C------Sets reference variable depending on what is solved
 C------If solving mass fraction, reference variable is temperature.
@@ -386,7 +395,7 @@ C------If solving mass fraction, reference variable is temperature.
 		VAR_REF = TEMPREF
 	 ELSE
 C------If solving temperature, reference variable is mass fraction.
-		VAR_REF = CREF
+            VAR_REF = CREF
 	    CREF = TEMPREF
 	 END IF
 
@@ -554,9 +563,9 @@ C________________ Loop over conditional simulations. 1 if conditional estimation
      ; ,ESTKRIG_GS,POSDISAUX_GS,POSDIS_GS,EXDRZN_GS,MXZONPP_GS
      ; ,DATASC_GS,IDIMWGT,IPNT_PAR,WGT_PAR,NPARDET,ICHECK_GS,LDIM_GS
      ; ,COORDGR_GS,PARC,WGT_UNK,IPOS,DERIV,PARGOOD,ISIM_GS
-     ; ,PARC_GS,IFLAG_SIMUL,COVPAR_GR)
+     ; ,PARC_GS,IFLAG_SIMUL,COVPAR_GR, PARNAME)
 
-
+        DEALLOCATE(PARNAME)
 C------------------------- Write results
 
          CALL WRI 
