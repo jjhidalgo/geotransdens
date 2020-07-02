@@ -255,7 +255,7 @@ C_______________________ Step B.2: Echoes Marquardt's process indicators
 
  2100   FORMAT(///,
      ;     '      INDICATORS OF MARQUARD METHOD; GOOD ITERATION.',/,
-     ;     ' ITER   FNEW     OBJHED    OBJCON    OBJPAR     ',
+     ;     ' ITER   FNEW     OBJHED    OBJCON    OBJPAR    OBJGEO     ',
      ;     'XMARQ    PHI(k-1) XMAXIM GNORM',/,I5,8E10.3)
                                                                   
         IF (IOWPI.NE.0) WRITE(71) NUMITER,ISUMFO,FNEW,OBJHED,OBJCON

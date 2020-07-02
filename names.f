@@ -68,7 +68,7 @@ C______________________________________ Parameter types
       TYPENAME(28) = 'Ext. conc.'    
       TYPENAME(29) = 'Gen. par. ' 
       TYPENAME(30) = 'Age coeff '
-      TYPENAME(31) = 'Void      '
+      TYPENAME(31) = 'Form.fact.'
       TYPENAME(32) = 'Void      '
       TYPENAME(33) = 'Void      '
       TYPENAME(34) = 'Void      '

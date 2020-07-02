@@ -132,7 +132,8 @@
 *                              28: External conc.
 *                              29: Generic param.
 *                              30: Age coefficient
-*                              31-40: Make your own parameter! 
+*                              31: Formation Factor
+*                              32-40: Make your own parameter! 
 *                             
 *                         COLUMNS:
 *                              1: partial objective function
